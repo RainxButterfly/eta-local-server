@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ResumeRepository extends JpaRepository<Resume, String> {
 
+    //一并加入查询，防止LazyInitializationException
     @EntityGraph(attributePaths = {
         "content.education", 
         "content.experience", 
@@ -17,6 +18,7 @@ public interface ResumeRepository extends JpaRepository<Resume, String> {
     })
     Page<Resume> findByOwnerIdOrderByCreatedAtDesc(String ownerId, Pageable pageable);
 
+    //一并加入查询，防止LazyInitializationException
     @EntityGraph(attributePaths = {
         "content.education", 
         "content.experience", 
