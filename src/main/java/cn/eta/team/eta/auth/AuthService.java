@@ -5,7 +5,6 @@ package cn.eta.team.eta.auth;
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.security.JwtService;
-import cn.eta.team.eta.security.EtaPrincipal;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

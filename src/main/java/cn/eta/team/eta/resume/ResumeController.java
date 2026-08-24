@@ -1,9 +1,6 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.resume;
-
-import cn.eta.team.eta.common.BizException;
-import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;
 import cn.eta.team.eta.common.util.JsonUtils;
@@ -11,7 +8,6 @@ import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
 import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
 import cn.eta.team.eta.resume.ResumeDtos.UpdateRequest;
 import cn.eta.team.eta.security.EtaPrincipal;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
@@ -32,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 简历制作（TODO：接入 JPA / 模板引擎 / 导出服务）。
+ * 简历制作
  *
  * @author StarLeaf-Roxy
  * @since 2026-08-24

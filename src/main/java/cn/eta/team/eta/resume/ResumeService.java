@@ -3,7 +3,6 @@ package cn.eta.team.eta.resume;
 import java.io.IOException;
 import java.time.Instant;
 
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +18,6 @@ import cn.eta.team.eta.common.util.PageUtils;
 import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
 import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
 import cn.eta.team.eta.resume.ResumeDtos.UpdateRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
