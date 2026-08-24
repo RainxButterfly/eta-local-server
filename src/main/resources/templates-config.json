@@ -1,0 +1,38 @@
+[
+  {
+    "id": "rt1",
+    "name": "极简 · Mono",
+    "desc": "克制留白与网格，适合理工简历",
+    "tone": "light",
+    "bg": "#f6f7fb"
+  },
+  {
+    "id": "rt2",
+    "name": "现代 · Indigo",
+    "desc": "侧边栏结构，突出信息层级",
+    "tone": "indigo",
+    "bg": "#eef0ff",
+    "popular": true
+  },
+  {
+    "id": "rt3",
+    "name": "经典 · Serif",
+    "desc": "衬线标题，稳重专业",
+    "tone": "serif",
+    "bg": "#fbf7f0"
+  },
+  {
+    "id": "rt4",
+    "name": "创意 · Coral",
+    "desc": "暖色点缀，适合创意岗",
+    "tone": "coral",
+    "bg": "#fff1ec"
+  },
+  {
+    "id": "rt5",
+    "name": "双栏 · Compact",
+    "desc": "一页双栏高密度信息",
+    "tone": "compact",
+    "bg": "#eef8f4"
+  }
+]

@@ -1,11 +1,14 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.module;
+package cn.eta.team.eta.resume;
 
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;
+import cn.eta.team.eta.common.util.JsonUtils;
+import tools.jackson.core.type.TypeReference;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -28,15 +32,18 @@ import java.util.Map;
 @RequestMapping("/resumes")
 public class ResumeController {
 
-    /** 模板列表 */
+    /**
+     * 模板列表
+     * 从静态资源读取
+     * @throws IOException
+     */
     @GetMapping("/templates")
-    public Result<List<Map<String, Object>>> templates() {
-        return Result.ok(List.of(
-                Map.of("id", "rt1", "name", "极简 · Mono", "desc", "克制留白与网格，适合理工简历", "tone", "light", "bg", "#f6f7fb"),
-                Map.of("id", "rt2", "name", "现代 · Indigo", "desc", "侧边栏结构，突出信息层级", "tone", "indigo", "bg", "#eef0ff", "popular", true),
-                Map.of("id", "rt3", "name", "经典 · Serif", "desc", "衬线标题，稳重专业", "tone", "serif", "bg", "#fbf7f0"),
-                Map.of("id", "rt4", "name", "创意 · Coral", "desc", "暖色点缀，适合创意岗", "tone", "coral", "bg", "#fff1ec"),
-                Map.of("id", "rt5", "name", "双栏 · Compact", "desc", "一页双栏高密度信息", "tone", "compact", "bg", "#eef8f4")));
+    public Result<List<Map<String, Object>>> templates() throws IOException {
+        List<Map<String, Object>> templates = JsonUtils.fromJsonFile(
+                "src/main/resources/templates-config.json",
+                new TypeReference<List<Map<String, Object>>>() {
+            });
+        return Result.ok(templates);
     }
 
     @GetMapping
