@@ -7,10 +7,16 @@ import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;
 import cn.eta.team.eta.common.util.JsonUtils;
+import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
+import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
+import cn.eta.team.eta.security.EtaPrincipal;
+import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,7 +36,9 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/resumes")
+@RequiredArgsConstructor
 public class ResumeController {
+    private final ResumeService resumeService;
 
     /**
      * 模板列表
@@ -47,8 +55,8 @@ public class ResumeController {
     }
 
     @GetMapping
-    public Result<Paged<?>> list() {
-        return Result.ok(Paged.of(List.of(), 0, 0, 20));
+    public Result<Paged<Resume>> list(@AuthenticationPrincipal EtaPrincipal p, @ModelAttribute QueryRequest q) {
+        return Result.ok(resumeService.list(p.userId(), q));
     }
 
     @PostMapping
