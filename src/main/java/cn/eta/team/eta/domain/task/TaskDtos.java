@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.task;
+package cn.eta.team.eta.domain.task;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

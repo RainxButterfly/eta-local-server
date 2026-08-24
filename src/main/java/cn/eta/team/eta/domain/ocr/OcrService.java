@@ -1,4 +1,4 @@
-package cn.eta.team.eta.ocr;
+package cn.eta.team.eta.domain.ocr;
 
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;

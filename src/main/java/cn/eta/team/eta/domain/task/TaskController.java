@@ -1,9 +1,15 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.task;
+package cn.eta.team.eta.domain.task;
 
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;
+import cn.eta.team.eta.domain.task.TaskDtos.CategoryCreateRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.CategoryVO;
+import cn.eta.team.eta.domain.task.TaskDtos.CreateRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.QueryRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.StatusRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.UpdateRequest;
 import cn.eta.team.eta.security.EtaPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,13 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-
-import cn.eta.team.eta.task.TaskDtos.CategoryCreateRequest;
-import cn.eta.team.eta.task.TaskDtos.CategoryVO;
-import cn.eta.team.eta.task.TaskDtos.CreateRequest;
-import cn.eta.team.eta.task.TaskDtos.QueryRequest;
-import cn.eta.team.eta.task.TaskDtos.StatusRequest;
-import cn.eta.team.eta.task.TaskDtos.UpdateRequest;
 
 /**
  * 任务管理接口。

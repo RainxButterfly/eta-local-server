@@ -1,11 +1,18 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.task;
+package cn.eta.team.eta.domain.task;
 
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.util.PageUtils;
+import cn.eta.team.eta.domain.task.TaskDtos.CategoryCreateRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.CategoryVO;
+import cn.eta.team.eta.domain.task.TaskDtos.CreateRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.QueryRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.StatusRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.UpdateRequest;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -13,13 +20,6 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-
-import cn.eta.team.eta.task.TaskDtos.CategoryCreateRequest;
-import cn.eta.team.eta.task.TaskDtos.CategoryVO;
-import cn.eta.team.eta.task.TaskDtos.CreateRequest;
-import cn.eta.team.eta.task.TaskDtos.QueryRequest;
-import cn.eta.team.eta.task.TaskDtos.StatusRequest;
-import cn.eta.team.eta.task.TaskDtos.UpdateRequest;
 
 /**
  * 任务业务：以当前登录用户为数据边界（ownerId 隔离）。

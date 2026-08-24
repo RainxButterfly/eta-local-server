@@ -1,4 +1,4 @@
-package cn.eta.team.eta.resume;
+package cn.eta.team.eta.domain.resume;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -15,9 +15,9 @@ import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.util.FileStorageUtils;
 import cn.eta.team.eta.common.util.JsonUtils;
 import cn.eta.team.eta.common.util.PageUtils;
-import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
-import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
-import cn.eta.team.eta.resume.ResumeDtos.UpdateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.CreateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.QueryRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.UpdateRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service

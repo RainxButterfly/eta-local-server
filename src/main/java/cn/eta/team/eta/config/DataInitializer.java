@@ -4,10 +4,11 @@ package cn.eta.team.eta.config;
 
 import cn.eta.team.eta.auth.User;
 import cn.eta.team.eta.auth.UserRepository;
-import cn.eta.team.eta.task.Task;
-import cn.eta.team.eta.task.TaskCategory;
-import cn.eta.team.eta.task.TaskCategoryRepository;
-import cn.eta.team.eta.task.TaskRepository;
+import cn.eta.team.eta.domain.task.Task;
+import cn.eta.team.eta.domain.task.TaskCategory;
+import cn.eta.team.eta.domain.task.TaskCategoryRepository;
+import cn.eta.team.eta.domain.task.TaskRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;

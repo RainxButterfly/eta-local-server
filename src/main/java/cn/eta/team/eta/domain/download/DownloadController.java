@@ -1,4 +1,4 @@
-package cn.eta.team.eta.download;
+package cn.eta.team.eta.domain.download;
  
 import cn.eta.team.eta.common.util.FileStorageUtils;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.module;
+package cn.eta.team.eta.domain.errors;
 
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;

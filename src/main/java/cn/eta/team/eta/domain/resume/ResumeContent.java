@@ -1,4 +1,4 @@
-package cn.eta.team.eta.resume;
+package cn.eta.team.eta.domain.resume;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.resume;
+package cn.eta.team.eta.domain.resume;
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;
 import cn.eta.team.eta.common.util.JsonUtils;
-import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
-import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
-import cn.eta.team.eta.resume.ResumeDtos.UpdateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.CreateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.QueryRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.UpdateRequest;
 import cn.eta.team.eta.security.EtaPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

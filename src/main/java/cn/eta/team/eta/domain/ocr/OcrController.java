@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.ocr;
+package cn.eta.team.eta.domain.ocr;
 
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
