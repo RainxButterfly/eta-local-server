@@ -15,9 +15,9 @@ import java.util.Optional;
  */
 public interface TaskRepository extends JpaRepository<Task, String> {
 
-    List<Task> findByOwnerId(Long ownerId);
+    List<Task> findByOwnerId(String ownerId);
 
-    Optional<Task> findByIdAndOwnerId(String id, Long ownerId);
+    Optional<Task> findByIdAndOwnerId(String id, String ownerId);
 
-    long countByOwnerIdAndCategoryId(Long ownerId, String categoryId);
+    long countByOwnerIdAndCategoryId(String ownerId, String categoryId);
 }

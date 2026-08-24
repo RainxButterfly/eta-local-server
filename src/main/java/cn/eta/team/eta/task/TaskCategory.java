@@ -27,7 +27,7 @@ public class TaskCategory {
     @Column(length = 36)
     private String id;
 
-    private Long ownerId;
+    private String ownerId;
 
     @Column(nullable = false)
     private String name;

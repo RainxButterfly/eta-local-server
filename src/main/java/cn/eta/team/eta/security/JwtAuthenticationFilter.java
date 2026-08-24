@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 Claims claims = jwtService.parse(token);
-                Long userId = jwtService.getUserId(claims);
+                String userId = jwtService.getUserId(claims);
                 String email = claims.get("email", String.class);
 
                 // 轻量 principal：只携带标识符，脏检查由各 Service 通过 CurrentUser 读取

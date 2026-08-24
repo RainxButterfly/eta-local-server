@@ -52,9 +52,8 @@ public class JwtService {
                 .getPayload();
     }
 
-    /** 从 claims 中取用户 id（数字类型兼容处理）。 */
-    public Long getUserId(Claims claims) {
-        Object v = claims.get("userId");
-        return v instanceof Number n ? n.longValue() : Long.valueOf(String.valueOf(v));
+    /** 从 claims 中取用户 id（UUID 字符串）。 */
+    public String getUserId(Claims claims) {
+        return String.valueOf(claims.get("userId"));
     }
 }
