@@ -29,7 +29,7 @@ public class ResumeService {
         int size = PageUtils.size(q.pageSize());
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Resume> resumePage = resumeRepository.findByUserIdOrderByCreatedAtDesc(ownerId, pageable);
+        Page<Resume> resumePage = resumeRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId, pageable);
 
         return Paged.of(resumePage);
     }
@@ -63,14 +63,14 @@ public class ResumeService {
         return resumeRepository.save(resume);
     }
 
-    private Resume requireOwnedTask(String id, String ownerId) {
-        return resumeRepository.findByIdAndOwnerId(id, ownerId)
-                .orElseThrow(() -> new BizException(ErrorCode.RESUME_NOT_FOUND));
-    }
-
     public void delete(String userId, String id) {
         Resume resume = requireOwnedTask(id, userId);
         resumeRepository.delete(resume);
+    }
+
+    private Resume requireOwnedTask(String id, String ownerId) {
+        return resumeRepository.findByIdAndOwnerId(id, ownerId)
+                .orElseThrow(() -> new BizException(ErrorCode.RESUME_NOT_FOUND));
     }
 
     public void export(String userId, String id, String format) {

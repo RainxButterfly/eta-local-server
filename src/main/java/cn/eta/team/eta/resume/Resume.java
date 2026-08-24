@@ -49,7 +49,6 @@ public class Resume {
         @AttributeOverride(name = "email", column = @Column(name = "email")),
         @AttributeOverride(name = "phone", column = @Column(name = "phone"))
     })
-    //不懒加载
-    @ElementCollection(fetch = FetchType.EAGER)
+    @Embedded
     private ResumeContent content;
 }
