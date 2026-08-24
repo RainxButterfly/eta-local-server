@@ -50,8 +50,6 @@ public class DataInitializer implements ApplicationRunner {
             return;
         }
 
-        Instant now = Instant.now();
-
         User user = new User();
         user.setEmail("demo@eta.cn");
         user.setNickname("Roxy");
@@ -101,6 +99,7 @@ public class DataInitializer implements ApplicationRunner {
         taskRepository.save(task);
     }
 
+    @SuppressWarnings("null")
     private String categoryName(String categoryId) {
         return categoryRepository.findById(categoryId).map(TaskCategory::getName).orElse("默认分类");
     }

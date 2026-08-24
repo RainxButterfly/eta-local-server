@@ -6,13 +6,17 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 /**
  * JSON 工具（基于 Jackson 3，包名 tools.jackson）。
  * <p>
- * 提供对象 &lt;-&gt; JSON 字符串的便捷转换；方法抛出的 {@link tools.jackson.core.JacksonException} 为运行时异常。
+ * 提供对象 &lt;-&gt; JSON 字符串的便捷转换；方法抛出的
+ * {@link tools.jackson.core.JacksonException} 为运行时异常。
  *
  * @author StarLeaf-Roxy
  * @since 2026-08-24
@@ -69,5 +73,15 @@ public final class JsonUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static <T> T fromJsonFile(String filePath, Class<T> type) throws IOException {
+        String json = Files.readString(Paths.get(filePath));
+        return fromJson(json, type);
+    }
+
+    public static <T> T fromJsonFile(String filePath, TypeReference<T> type) throws IOException {
+        String json = Files.readString(Paths.get(filePath));
+        return fromJson(json, type);
     }
 }
