@@ -11,6 +11,7 @@ import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
 import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
 import cn.eta.team.eta.resume.ResumeDtos.UpdateRequest;
 import cn.eta.team.eta.security.EtaPrincipal;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
@@ -40,11 +41,13 @@ import java.util.Map;
 @RequestMapping("/resumes")
 @RequiredArgsConstructor
 public class ResumeController {
+    
     private final ResumeService resumeService;
 
     /**
      * 模板列表
      * 从静态资源读取
+     * 
      * @throws IOException
      */
     @GetMapping("/templates")
@@ -52,7 +55,7 @@ public class ResumeController {
         List<Map<String, Object>> templates = JsonUtils.fromJsonFile(
                 "src/main/resources/templates-config.json",
                 new TypeReference<List<Map<String, Object>>>() {
-            });
+                });
         return Result.ok(templates);
     }
 
@@ -62,7 +65,7 @@ public class ResumeController {
     }
 
     @PostMapping
-    public Result<Resume> create(@AuthenticationPrincipal EtaPrincipal p, @Valid @RequestBody CreateRequest q ) {
+    public Result<Resume> create(@AuthenticationPrincipal EtaPrincipal p, @Valid @RequestBody CreateRequest q) {
         return Result.ok(resumeService.create(p.userId(), q));
     }
 
@@ -72,7 +75,8 @@ public class ResumeController {
     }
 
     @PutMapping("/{id}")
-    public Result<Resume> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id, @RequestBody UpdateRequest q) {
+    public Result<Resume> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
+            @RequestBody UpdateRequest q) {
         return Result.ok(resumeService.update(p.userId(), id, q));
     }
 
@@ -83,12 +87,11 @@ public class ResumeController {
     }
 
     @PostMapping("/{id}/export")
-    public Result<Map<String, String>> export(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id, @RequestBody Map<String, String> body) {
-        String format = body.getOrDefault("format", "html");
-        if (!List.of("pdf", "html", "markdown").contains(format)) {
-            throw new BizException(ErrorCode.RESUME_EXPORT_FAILED);
-        }
-        resumeService.export(p.userId(), id, format);
+    public Result<Map<String, String>> export(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
+            @RequestBody Map<String, String> body,
+            HttpServletResponse response){
+        String format = body.getOrDefault("format", "json");
+        resumeService.export(p.userId(), id, format, response);
         return Result.ok(Map.of("downloadUrl", "/download/resumes/" + id + "." + format));
     }
 }
