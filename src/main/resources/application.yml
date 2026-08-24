@@ -7,10 +7,6 @@ server:
   port: 8080
   servlet:
     context-path: /api/v1
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
 
 spring:
   application:
@@ -32,6 +28,11 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 # Actuator 只暴露健康检查（Electron 主进程可用于探测后端就绪）
 management:

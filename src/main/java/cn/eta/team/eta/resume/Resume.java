@@ -1,11 +1,8 @@
 package cn.eta.team.eta.resume;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.validator.constraints.UUID;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,7 +28,7 @@ public class Resume {
     @Column(length = 36)
     private String id;
 
-    /** 归属用户 */
+    @Column(nullable = false)
     private String ownerId;
 
     @Column(nullable = false)
@@ -46,6 +43,13 @@ public class Resume {
     @Column(nullable = false)
     private Instant updatedAt = Instant.now();
 
-    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "name", column = @Column(name = "real_name")),
+        @AttributeOverride(name = "role", column = @Column(name = "role")),
+        @AttributeOverride(name = "email", column = @Column(name = "email")),
+        @AttributeOverride(name = "phone", column = @Column(name = "phone"))
+    })
+    //不懒加载
+    @ElementCollection(fetch = FetchType.EAGER)
     private ResumeContent content;
 }
