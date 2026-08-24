@@ -50,15 +50,13 @@ public class DataInitializer implements ApplicationRunner {
             return;
         }
 
-        Instant now = Instant.now();
-
         User user = new User();
         user.setEmail("demo@eta.cn");
         user.setNickname("Roxy");
         user.setBio("测试简介内容");
         user.setPasswordHash(passwordEncoder.encode("123456"));
         userRepository.save(user);
-        Long owner = user.getId();
+        String owner = user.getId();
 
         List<CategorySeed> categories = List.of(
                 new CategorySeed("课程作业", "#3d7bd6"),
@@ -82,7 +80,7 @@ public class DataInitializer implements ApplicationRunner {
         log.info("[ETA] 演示数据初始化完成。演示账号 demo@eta.cn / 123456");
     }
 
-    private void saveTask(Long owner, String categoryId, String title, String tag,
+    private void saveTask(String owner, String categoryId, String title, String tag,
                           String tone, String due, String status, int progress, String priority) {
         Task task = new Task();
         task.setOwnerId(owner);
@@ -101,6 +99,7 @@ public class DataInitializer implements ApplicationRunner {
         taskRepository.save(task);
     }
 
+    @SuppressWarnings("null")
     private String categoryName(String categoryId) {
         return categoryRepository.findById(categoryId).map(TaskCategory::getName).orElse("默认分类");
     }

@@ -4,7 +4,6 @@ package cn.eta.team.eta.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -52,6 +51,8 @@ public class SecurityConfig {
                         // H2 控制台与健康检查
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        // 文件下载
+                        .requestMatchers("/download/**").permitAll()
                         // 其余均需认证
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))

@@ -4,8 +4,6 @@ package cn.eta.team.eta.task;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -33,7 +31,7 @@ public class Task {
     private String id;
 
     /** 归属用户 */
-    private Long ownerId;
+    private String ownerId;
 
     @Column(nullable = false)
     private String title;

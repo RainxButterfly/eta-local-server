@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.auth;
 
-import cn.eta.team.eta.common.Result;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -46,7 +45,7 @@ public final class AuthDtos {
     }
 
     /** 对外暴露的用户信息（脱敏） */
-    public record UserVO(Long id, String nickname, String email, String avatar, String bio, String createdAt) {
+    public record UserVO(String id, String nickname, String email, String avatar, String bio, String createdAt) {
 
         public static UserVO from(User u) {
             return new UserVO(u.getId(), u.getNickname(), u.getEmail(), u.getAvatar(), u.getBio(),

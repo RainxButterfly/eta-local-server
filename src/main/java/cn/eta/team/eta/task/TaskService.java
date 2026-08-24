@@ -43,7 +43,7 @@ public class TaskService {
 
     /** 分页查询当前用户的任务（支持状态 / 分类 / 关键词筛选） */
     @Transactional(readOnly = true)
-    public Paged<Task> list(Long ownerId, QueryRequest q) {
+    public Paged<Task> list(String ownerId, QueryRequest q) {
         int page = PageUtils.page(q.page());
         int size = PageUtils.size(q.pageSize());
         List<Task> tasks = taskRepository.findByOwnerId(ownerId);
@@ -65,12 +65,12 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public Task detail(String id, Long ownerId) {
+    public Task detail(String id, String ownerId) {
         return requireOwnedTask(id, ownerId);
     }
 
     @Transactional
-    public Task create(Long ownerId, CreateRequest req) {
+    public Task create(String ownerId, CreateRequest req) {
         if (!StringUtils.hasText(req.title())) {
             throw new BizException(ErrorCode.TASK_TITLE_EMPTY);
         }
@@ -96,7 +96,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task update(String id, Long ownerId, UpdateRequest req) {
+    public Task update(String id, String ownerId, UpdateRequest req) {
         Task task = requireOwnedTask(id, ownerId);
         if (req.title() != null) {
             task.setTitle(req.title());
@@ -133,7 +133,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task updateStatus(String id, Long ownerId, StatusRequest req) {
+    public Task updateStatus(String id, String ownerId, StatusRequest req) {
         if (!STATUSES.contains(req.status())) {
             throw new BizException(ErrorCode.ILLEGAL_TASK_STATUS);
         }
@@ -150,7 +150,7 @@ public class TaskService {
     }
 
     @Transactional
-    public void remove(String id, Long ownerId) {
+    public void remove(String id, String ownerId) {
         Task task = requireOwnedTask(id, ownerId);
         taskRepository.delete(task);
     }
@@ -158,7 +158,7 @@ public class TaskService {
     /* ---------------- 分类管理 ---------------- */
 
     @Transactional(readOnly = true)
-    public List<CategoryVO> listCategories(Long ownerId) {
+    public List<CategoryVO> listCategories(String ownerId) {
         return categoryRepository.findByOwnerId(ownerId).stream()
                 .map(c -> new CategoryVO(c.getId(), c.getName(), c.getColor(),
                         taskRepository.countByOwnerIdAndCategoryId(ownerId, c.getId())))
@@ -166,7 +166,7 @@ public class TaskService {
     }
 
     @Transactional
-    public CategoryVO createCategory(Long ownerId, CategoryCreateRequest req) {
+    public CategoryVO createCategory(String ownerId, CategoryCreateRequest req) {
         if (categoryRepository.existsByOwnerIdAndName(ownerId, req.name())) {
             throw new BizException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
@@ -178,7 +178,7 @@ public class TaskService {
         return new CategoryVO(category.getId(), category.getName(), category.getColor(), 0);
     }
 
-    private Task requireOwnedTask(String id, Long ownerId) {
+    private Task requireOwnedTask(String id, String ownerId) {
         return taskRepository.findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new BizException(ErrorCode.TASK_NOT_FOUND));
     }

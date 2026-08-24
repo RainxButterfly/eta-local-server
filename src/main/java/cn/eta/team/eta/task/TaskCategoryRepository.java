@@ -15,9 +15,9 @@ import java.util.Optional;
  */
 public interface TaskCategoryRepository extends JpaRepository<TaskCategory, String> {
 
-    List<TaskCategory> findByOwnerId(Long ownerId);
+    List<TaskCategory> findByOwnerId(String ownerId);
 
-    Optional<TaskCategory> findByIdAndOwnerId(String id, Long ownerId);
+    Optional<TaskCategory> findByIdAndOwnerId(String id, String ownerId);
 
-    boolean existsByOwnerIdAndName(Long ownerId, String name);
+    boolean existsByOwnerIdAndName(String ownerId, String name);
 }

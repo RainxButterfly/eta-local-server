@@ -10,7 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * @author StarLeaf-Roxy
  * @since 2026-08-24
  */
-public record EtaPrincipal(Long userId, String email) {
+public record EtaPrincipal(String userId, String email) {
 
     public static EtaPrincipal from() {
         Object principal = SecurityContextHolder.getContext().getAuthentication() == null

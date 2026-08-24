@@ -4,12 +4,11 @@ package cn.eta.team.eta.auth;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
 
@@ -25,9 +24,11 @@ import java.time.Instant;
 @Setter
 public class User {
 
+    /** 用户唯一标识：UUID 字符串，本地与云端保持一致 */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(length = 36)
+    private String id;
 
     @Column(nullable = false, unique = true, length = 128)
     private String email;

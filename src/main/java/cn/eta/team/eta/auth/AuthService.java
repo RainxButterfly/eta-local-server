@@ -5,7 +5,6 @@ package cn.eta.team.eta.auth;
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.security.JwtService;
-import cn.eta.team.eta.security.EtaPrincipal;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -68,13 +67,13 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public UserVO me(Long userId) {
+    public UserVO me(String userId) {
         User user = requireUser(userId);
         return UserVO.from(user);
     }
 
     @Transactional
-    public UserVO updateProfile(Long userId, UpdateProfileRequest req) {
+    public UserVO updateProfile(String userId, UpdateProfileRequest req) {
         User user = requireUser(userId);
         user.setNickname(req.nickname());
         if (req.bio() != null) {
@@ -88,7 +87,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void changePassword(Long userId, AuthDtos.ChangePasswordRequest req) {
+    public void changePassword(String userId, AuthDtos.ChangePasswordRequest req) {
         User user = requireUser(userId);
         if (!passwordEncoder.matches(req.oldPassword(), user.getPasswordHash())) {
             throw new BizException(ErrorCode.EMAIL_OR_PASSWORD_ERROR);
@@ -103,7 +102,7 @@ public class AuthService {
     }
 
     /** 仅供其他模块使用：解析令牌得到 userId。 */
-    public Long resolveUserId(String token) {
+    public String resolveUserId(String token) {
         Claims claims = jwtService.parse(token);
         return jwtService.getUserId(claims);
     }
@@ -116,7 +115,7 @@ public class AuthService {
         return new LoginResponse(token, UserVO.from(user));
     }
 
-    private User requireUser(Long userId) {
+    private User requireUser(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(ErrorCode.UNAUTHORIZED));
     }
