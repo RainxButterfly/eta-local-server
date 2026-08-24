@@ -1,12 +1,11 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.Ocr;
+package cn.eta.team.eta.ocr;
 
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.common.Result;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.tess4j.TesseractException;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +17,12 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 
-@Slf4j
+/**
+ * ORC
+ *
+ * @author ormisnal
+ * @since 2026-08-24
+ */
 @RestController
 @RequestMapping("/ocr")
 @RequiredArgsConstructor
@@ -26,6 +30,10 @@ public class OcrController {
 
     private final OcrService ocrService;
 
+    /**
+     * ORC 
+     * @param body 请求体 {"image":"base64编码图片", "type": "error|note"}
+     */
     @PostMapping
     public Result<Map<String, String>> recognize(@RequestBody Map<String, String> body) {
         String base64Image = body.get("image");

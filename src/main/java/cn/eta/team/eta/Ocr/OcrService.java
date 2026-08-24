@@ -1,4 +1,4 @@
-package cn.eta.team.eta.Ocr;
+package cn.eta.team.eta.ocr;
 
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
@@ -14,6 +14,12 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+/**
+ * ORC
+ *
+ * @author ormisnal
+ * @since 2026-08-24
+ */
 @Service
 public class OcrService {
 
