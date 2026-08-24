@@ -110,6 +110,12 @@
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- Tesseract的Java wrapper -->
+		<dependency>
+			<groupId>net.sourceforge.tess4j</groupId>
+			<artifactId>tess4j</artifactId>
+			<version>LATEST</version>
+		</dependency>
 	</dependencies>
 
 	<build>
