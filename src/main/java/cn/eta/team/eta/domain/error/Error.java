@@ -29,13 +29,13 @@ public class Error {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String answer;
-
     @Column(length = 64)
     private String subject;
 
     @Column(length = 128)
     private String source;
 
+    // TODO 这是啥字段
     @Column(length = 20)
     private String level;
 
