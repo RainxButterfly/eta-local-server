@@ -1,0 +1,53 @@
+# ============================================================
+# ETA 后端配置
+# 前端约定：服务地址 http://127.0.0.1:8080，接口前缀 /api/v1
+# 响应统一结构 { code, message, data }，code = 200 表示成功
+# ============================================================
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: eta-backend
+  # H2 内存数据库
+  datasource:
+    url: jdbc:h2:mem:eta;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create        # 开发期自动建表；生产可改为 none / validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# Actuator 只暴露健康检查（Electron 主进程可用于探测后端就绪）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# ETA 自定义配置
+eta:
+  jwt:
+    # HS256 密钥，长度需 >= 32 字节；生产环境请通过环境变量覆盖
+    secret: eta-app-2026-learner-toolkit-desktop-secret-key-for-hs256
+    expiration-ms: 86400000   # 令牌有效期：24h
+
+logging:
+  level:
+    cn.eta.team.eta: INFO
+    org.hibernate.SQL: WARN
