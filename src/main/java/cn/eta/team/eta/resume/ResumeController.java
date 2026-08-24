@@ -41,7 +41,7 @@ import java.util.Map;
 @RequestMapping("/resumes")
 @RequiredArgsConstructor
 public class ResumeController {
-    
+
     private final ResumeService resumeService;
 
     /**
@@ -88,10 +88,9 @@ public class ResumeController {
 
     @PostMapping("/{id}/export")
     public Result<Map<String, String>> export(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
-            @RequestBody Map<String, String> body,
-            HttpServletResponse response){
+            @RequestBody Map<String, String> body) {
         String format = body.getOrDefault("format", "json");
-        resumeService.export(p.userId(), id, format, response);
-        return Result.ok(Map.of("downloadUrl", "/download/resumes/" + id + "." + format));
+        return Result.ok(Map.of("downloadUrl",
+                resumeService.export(p.userId(), id, format)));
     }
 }

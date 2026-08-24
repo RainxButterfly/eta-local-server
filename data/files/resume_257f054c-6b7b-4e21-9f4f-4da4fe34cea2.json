@@ -1,0 +1,30 @@
+{
+  "id" : "257f054c-6b7b-4e21-9f4f-4da4fe34cea2",
+  "ownerId" : "dc5f4658-0dec-4976-b1f9-ab7cdf47f778",
+  "name" : "我的简历",
+  "templateId" : "rt2",
+  "createdAt" : "2026-08-24T14:07:15.307835Z",
+  "updatedAt" : "2026-08-24T14:07:15.307835Z",
+  "content" : {
+    "name" : "林默",
+    "role" : "后端开发 · 应届",
+    "email" : "demo@eta.cn",
+    "phone" : "18888888888",
+    "education" : [ {
+      "title" : "家里蹲大学",
+      "subtitle" : "就读四年",
+      "period" : "不记得喵"
+    } ],
+    "experience" : [ {
+      "title" : "实习",
+      "subtitle" : "家里蹲公司实习",
+      "period" : "前几天喵"
+    } ],
+    "projects" : [ {
+      "title" : "ETA",
+      "subtitle" : "参与ETA项目的开发",
+      "period" : "前几天喵"
+    } ],
+    "skills" : [ "Java", "SpringBoot4" ]
+  }
+}

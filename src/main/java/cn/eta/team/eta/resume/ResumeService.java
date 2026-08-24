@@ -2,7 +2,6 @@ package cn.eta.team.eta.resume;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Set;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
@@ -14,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.common.Paged;
+import cn.eta.team.eta.common.util.FileStorageUtils;
 import cn.eta.team.eta.common.util.JsonUtils;
 import cn.eta.team.eta.common.util.PageUtils;
 import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
@@ -78,29 +78,28 @@ public class ResumeService {
     }
 
     @Transactional(readOnly = true)
-    public void export(String userId, String id, String format, HttpServletResponse response) {
+    public String export(String userId, String id, String format) {
         Resume resume = requireOwnedTask(id, userId);
-
+        byte[] fileContent;
+        String fileName = "resume_" + resume.getId() + "." + format;
         try {
             if ("json".equalsIgnoreCase(format)) {
-                exportJson(response, resume);
+                fileContent = exportJson(resume);
             } else if ("pdf".equalsIgnoreCase(format)) {
-                exportPdf(response, resume);
+                fileContent = exportPdf(resume);
             } else if ("markdown".equalsIgnoreCase(format) || "md".equalsIgnoreCase(format)) {
-                exportMarkdown(response, resume);
+                fileContent = exportMarkdown(resume);
             } else {
                 throw new BizException(ErrorCode.RESUME_EXPORT_FAILED, "不支持的导出格式: " + format);
             }
         } catch (IOException e) {
             throw new RuntimeException("文件导出失败", e);
         }
+        FileStorageUtils.saveToLocal(fileContent, fileName);
+        return fileName;
     }
 
-    private void exportMarkdown(HttpServletResponse response, Resume resume) throws IOException {
-        String fileName = "resume_" + resume.getId() + ".md";
-        response.setContentType("text/markdown;charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-
+    private byte[] exportMarkdown(Resume resume) throws IOException {
         StringBuilder md = new StringBuilder();
         md.append("# ").append(resume.getContent().getName()).append("\n\n");
         md.append("**岗位**: ").append(resume.getContent().getRole()).append("\n");
@@ -149,23 +148,15 @@ public class ResumeService {
                 md.append(String.join("  ", resume.getContent().getSkills()));
             }
         }
-
-        response.getWriter().write(md.toString());
-        response.getWriter().flush();
+        return md.toString().getBytes();
     }
 
-    private void exportJson(HttpServletResponse response, Resume resume) throws IOException {
-        String fileName = "resume_" + resume.getId() + ".json";
-
-        response.setContentType("application/json;charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-
+    private byte[] exportJson(Resume resume) throws IOException {
         String json = JsonUtils.toJsonPretty(resume);
-        response.getWriter().write(json);
-        response.getWriter().flush();
+        return json.getBytes();
     }
 
-    private void exportPdf(HttpServletResponse response, Resume resume) {
+    private byte[] exportPdf(Resume resume) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'exportPdf'");
     }
