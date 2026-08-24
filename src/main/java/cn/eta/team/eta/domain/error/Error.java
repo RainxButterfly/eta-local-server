@@ -1,4 +1,4 @@
-package cn.eta.team.eta.domain.errors;
+package cn.eta.team.eta.domain.error;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -21,6 +21,9 @@ public class Error {
     @Column(length = 36, nullable = false, updatable = false)
     private String id;
 
+    @Column(length =  36, nullable = false)
+    private String ownerId;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String question;
 
@@ -36,6 +39,7 @@ public class Error {
     @Column(length = 20)
     private String level;
 
+    //TODO 这是啥字段
     @Column(length = 20)
     private String tone;
 
