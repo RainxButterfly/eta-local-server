@@ -100,7 +100,6 @@ public class DataInitializer implements ApplicationRunner {
         taskRepository.save(task);
     }
 
-    @SuppressWarnings("null")
     private String categoryName(String categoryId) {
         return categoryRepository.findById(categoryId).map(TaskCategory::getName).orElse("默认分类");
     }

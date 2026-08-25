@@ -59,7 +59,7 @@ public class TaskController {
 
     @PutMapping("/{id}")
     public Result<Task> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
-                               @RequestBody UpdateRequest req) {
+                               @Valid @RequestBody UpdateRequest req) {
         return Result.ok(taskService.update(id, p.userId(), req));
     }
 

@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 RainxButterfly
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.domain.ocr;
 
 import net.sourceforge.tess4j.ITesseract;
@@ -15,7 +17,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- * ORC
+ * OCR
  *
  * @author ormisnal
  * @since 2026-08-24

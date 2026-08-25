@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 RainxButterfly
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.domain.error;
 
 import jakarta.persistence.*;
@@ -41,7 +43,7 @@ public class Error {
     @Column(length = 20)
     private String tone;
 
-    private long wrongCount = 0;
+    private Integer wrongCount = 0;
 
     private boolean mastered = false;
 

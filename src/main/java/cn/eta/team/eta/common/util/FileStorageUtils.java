@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 RainxButterfly
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common.util;
 
 import java.io.IOException;
@@ -55,7 +57,7 @@ public final class FileStorageUtils {
             throw new RuntimeException("保存文件失败: " + targetPath, e);
         }
 
-        return targetDir + "\\" + fileName;
+        return targetPath.toString();
     }
 
     /**

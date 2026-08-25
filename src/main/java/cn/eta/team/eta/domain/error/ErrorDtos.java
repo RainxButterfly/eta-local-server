@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 RainxButterfly
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.domain.error;
 
 import jakarta.validation.constraints.NotBlank;
@@ -49,17 +51,17 @@ public final class ErrorDtos {
         /**
          * 学科统计结果（DTO）
          */
-        public record SubjectStat(String subject, long count) {
+        public record SubjectStat(String subject, Integer count) {
         }
 
         public record ReviewSubmitRequest(
                         String id,
-                        boolean remembered) {
+                        Boolean remembered) {
         }
 
         public record ReviewSubmitVO(
                         String id,
-                        boolean mastered,
-                        long wrongCount) {
+                        Boolean mastered,
+                        Integer wrongCount) {
         }
 }

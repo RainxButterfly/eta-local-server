@@ -18,7 +18,7 @@ import java.util.Base64;
 import java.util.Map;
 
 /**
- * ORC
+ * OCR
  *
  * @author ormisnal
  * @since 2026-08-24
@@ -31,7 +31,7 @@ public class OcrController {
     private final OcrService ocrService;
 
     /**
-     * ORC 
+     * OCR 
      * @param body 请求体 {"image":"base64编码图片", "type": "error|note"}
      */
     @PostMapping

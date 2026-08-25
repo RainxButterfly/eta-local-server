@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * 简历制作
  *
- * @author StarLeaf-Roxy
+ * @author StarLeaf-Roxy ormisnal
  * @since 2026-08-24
  */
 @RestController
@@ -72,7 +72,7 @@ public class ResumeController {
 
     @PutMapping("/{id}")
     public Result<Resume> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
-            @RequestBody UpdateRequest q) {
+            @Valid @RequestBody UpdateRequest q) {
         return Result.ok(resumeService.update(p.userId(), id, q));
     }
 

@@ -90,7 +90,7 @@ public class AuthService {
     public void changePassword(String userId, AuthDtos.ChangePasswordRequest req) {
         User user = requireUser(userId);
         if (!passwordEncoder.matches(req.oldPassword(), user.getPasswordHash())) {
-            throw new BizException(ErrorCode.EMAIL_OR_PASSWORD_ERROR);
+            throw new BizException(ErrorCode.BAD_REQUEST, "旧密码不正确");
         }
         user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
         userRepository.save(user);

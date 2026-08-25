@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 RainxButterfly
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.domain.error;
 
 import java.time.Instant;
@@ -35,7 +37,8 @@ public class ErrorService {
 
     @Transactional(readOnly = true)
     public Paged<Error> list(String ownerId, QueryRequest q) {
-        int page = PageUtils.page(q.page() - 1);
+        int pageNum = q.page() != null ? q.page() - 1 : 0;
+        int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
@@ -59,7 +62,6 @@ public class ErrorService {
         error.setSubject(q.subject());
         error.setSource(q.source());
         error.setLevel(q.level());
-        error.setTone(null);
         if (q.tags() != null && !q.tags().isEmpty()) {
             error.setTags(q.tags());
         }
@@ -108,30 +110,30 @@ public class ErrorService {
     public List<SubjectStat> getSubjectStats(String ownerId) {
         List<Object[]> results = errorRepository.countBySubject(ownerId);
         return results.stream()
-                .map(row -> new SubjectStat((String) row[0], ((Number) row[1]).longValue()))
+                .map(row -> new SubjectStat((String) row[0], ((Number) row[1]).intValue()))
                 .collect(Collectors.toList());
     }
 
     public List<Error> review(String ownerId) {
-        List<Error> errors = errorRepository.findByOwnerIdAndNextReviewAtLessThanEqual(ownerId, Instant.now());
-        return errors;
+        return errorRepository.findByOwnerIdAndNextReviewAtLessThanEqual(ownerId, Instant.now());
     }
 
     @Transactional
     public ReviewSubmitVO submitReview(String ownerId, String errorId, ReviewSubmitRequest q) {
         Error error = requireOwnedError(ownerId, errorId);
 
-        // 构建 FSRS Card 对象
+        boolean remembered = Boolean.TRUE.equals(q.remembered());
+
         Card oldCard = Card.builder()
                 .difficulty(error.getDifficulty())
                 .stability(error.getStability())
                 .lastReview(error.getLastReviewAt() != null
                         ? error.getLastReviewAt()
-                        : error.getCreatedAt()) // 若从未复习，以创建时间为准
+                        : error.getCreatedAt())
                 .due(error.getNextReviewAt())
                 .build();
 
-        Rating rating = mapQualityToRating(q.remembered());
+        Rating rating = remembered ? Rating.EASY : Rating.HARD;
 
         CardAndReviewLog result = fsrsScheduler.reviewCard(oldCard, rating);
         Card newCard = result.card();
@@ -140,19 +142,12 @@ public class ErrorService {
         error.setStability(newCard.getStability());
         error.setLastReviewAt(Instant.now());
         error.setNextReviewAt(newCard.getDue());
-        // 当稳定性间隔大于365天时标记为已掌握
         error.setMastered(newCard.getStability() > 365.0);
-        error.setWrongCount(q.remembered() ? error.getWrongCount() : error.getWrongCount() + 1);
-        error.setLastWrongAt(q.remembered() ? error.getLastWrongAt() : Instant.now());
+        error.setWrongCount(remembered ? error.getWrongCount() : error.getWrongCount() + 1);
+        error.setLastWrongAt(remembered ? error.getLastWrongAt() : Instant.now());
 
         errorRepository.save(error);
 
-        return new ReviewSubmitVO(errorId, false, error.getWrongCount());
-    }
-
-    private Rating mapQualityToRating(boolean remembered) {
-        if (remembered)
-            return Rating.EASY;
-        return Rating.HARD;
+        return new ReviewSubmitVO(errorId, error.isMastered(), error.getWrongCount());
     }
 }

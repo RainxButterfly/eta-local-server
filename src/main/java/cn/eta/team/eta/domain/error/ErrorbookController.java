@@ -11,6 +11,7 @@ import cn.eta.team.eta.domain.error.ErrorDtos.ReviewSubmitVO;
 import cn.eta.team.eta.domain.error.ErrorDtos.SubjectStat;
 import cn.eta.team.eta.domain.error.ErrorDtos.UpdateRequest;
 import cn.eta.team.eta.security.EtaPrincipal;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -43,7 +44,7 @@ public class ErrorbookController {
     }
 
     @PostMapping
-    public Result<Error> create(@AuthenticationPrincipal EtaPrincipal p, @RequestBody CreateRequest q) {
+    public Result<Error> create(@AuthenticationPrincipal EtaPrincipal p, @Valid @RequestBody CreateRequest q) {
         return Result.ok(errorService.create(p.userId() ,q));
     }
 
@@ -53,7 +54,7 @@ public class ErrorbookController {
     }
 
     @PutMapping("/{id}")
-    public Result<Error> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id, @RequestBody UpdateRequest q) {
+    public Result<Error> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id, @Valid @RequestBody UpdateRequest q) {
         return Result.ok(errorService.update(p.userId(), id, q));
     }
 
@@ -77,7 +78,7 @@ public class ErrorbookController {
 
     /** 提交复习结果 */
     @PostMapping("/{id}/review")
-    public Result<ReviewSubmitVO> submitReview(@AuthenticationPrincipal EtaPrincipal p,@PathVariable String id,@RequestBody ReviewSubmitRequest q) {
+    public Result<ReviewSubmitVO> submitReview(@AuthenticationPrincipal EtaPrincipal p,@PathVariable String id,@Valid @RequestBody ReviewSubmitRequest q) {
         return Result.ok(errorService.submitReview(p.userId(), id, q));                                         
     }
 }
