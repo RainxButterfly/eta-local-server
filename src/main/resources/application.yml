@@ -23,7 +23,7 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        format_sql: true
+        '[format_sql]': true
   h2:
     console:
       enabled: true
@@ -57,5 +57,5 @@ eta:
 
 logging:
   level:
-    cn.eta.team.eta: INFO
-    org.hibernate.SQL: WARN
+    '[cn.eta.team.eta]': INFO
+    '[org.hibernate.SQL]': WARN

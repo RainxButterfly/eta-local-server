@@ -1,12 +1,13 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.sync;
+package cn.eta.team.eta.domain.sync;
 
 import cn.eta.team.eta.common.Result;
+import cn.eta.team.eta.domain.sync.SyncDtos.DeviceInfo;
+import cn.eta.team.eta.domain.sync.SyncDtos.SyncResponse;
+import cn.eta.team.eta.domain.sync.SyncDtos.SyncStatus;
 import cn.eta.team.eta.security.EtaPrincipal;
-import cn.eta.team.eta.sync.SyncDtos.DeviceInfo;
-import cn.eta.team.eta.sync.SyncDtos.SyncResponse;
-import cn.eta.team.eta.sync.SyncDtos.SyncStatus;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

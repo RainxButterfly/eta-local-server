@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.sync;
+package cn.eta.team.eta.domain.sync;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

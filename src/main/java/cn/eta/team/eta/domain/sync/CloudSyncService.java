@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.sync;
+package cn.eta.team.eta.domain.sync;
 
 import cn.eta.team.eta.auth.UserAccount;
 import cn.eta.team.eta.auth.UserAccountRepository;
 import cn.eta.team.eta.common.util.JsonUtils;
-import cn.eta.team.eta.sync.SyncDtos.DeviceInfo;
-import cn.eta.team.eta.sync.SyncDtos.SyncMeta;
-import cn.eta.team.eta.sync.SyncDtos.SyncResponse;
-import cn.eta.team.eta.sync.SyncDtos.SyncStatus;
-import cn.eta.team.eta.sync.SyncDtos.UserAccountSnapshot;
+import cn.eta.team.eta.domain.sync.SyncDtos.DeviceInfo;
+import cn.eta.team.eta.domain.sync.SyncDtos.SyncMeta;
+import cn.eta.team.eta.domain.sync.SyncDtos.SyncResponse;
+import cn.eta.team.eta.domain.sync.SyncDtos.SyncStatus;
+import cn.eta.team.eta.domain.sync.SyncDtos.UserAccountSnapshot;
 import cn.eta.team.eta.tenant.TenantContext;
 import cn.eta.team.eta.tenant.UserDatabaseInitializer;
 import org.springframework.beans.factory.annotation.Value;
