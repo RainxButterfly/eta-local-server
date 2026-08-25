@@ -22,7 +22,7 @@ public interface ErrorRepository extends JpaRepository<Error, String> {
     Optional<Error> findByIdAndOwnerId(String id, String ownerId);
 
     // 统计各学科错题数量（按用户筛选）
-    @Query("SELECT e.subject, COUNT(e) FROM eta_error e WHERE e.ownerId = :ownerId GROUP BY e.subject ORDER BY COUNT(e) DESC")
+    @Query("SELECT e.subject, COUNT(e) FROM Error e WHERE e.ownerId = :ownerId GROUP BY e.subject ORDER BY COUNT(e) DESC")
     List<Object[]> countBySubject(String ownerId);
 
     @EntityGraph(attributePaths = { "tags" })

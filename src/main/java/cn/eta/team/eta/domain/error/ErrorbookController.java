@@ -25,10 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
-
 /**
- * 错题本（TODO：接入 JPA 与遗忘曲线复习调度）。
+ * 错题本
  *
  * @author StarLeaf-Roxy
  * @since 2026-08-24
@@ -45,7 +43,7 @@ public class ErrorbookController {
     }
 
     @PostMapping
-    public Result<Error> create(@AuthenticationPrincipal EtaPrincipal p, @ModelAttribute CreateRequest q) {
+    public Result<Error> create(@AuthenticationPrincipal EtaPrincipal p, @RequestBody CreateRequest q) {
         return Result.ok(errorService.create(p.userId() ,q));
     }
 

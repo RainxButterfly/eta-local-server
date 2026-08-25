@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -68,7 +67,7 @@ public class ErrorService {
         error.setDifficulty(0);
         error.setStability(0);
         error.setLastReviewAt(null);
-        error.setNextReviewAt(Instant.now().plusSeconds(86400L));
+        error.setNextReviewAt(Instant.now());
         return errorRepository.save(error);
     }
 
