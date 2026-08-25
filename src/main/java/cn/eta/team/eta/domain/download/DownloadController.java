@@ -1,4 +1,6 @@
-package cn.eta.team.eta.download;
+// SPDX-FileCopyrightText: 2026 RainxButterfly
+// SPDX-License-Identifier: AGPL-3.0-or-later
+package cn.eta.team.eta.domain.download;
  
 import cn.eta.team.eta.common.util.FileStorageUtils;
 import jakarta.servlet.http.HttpServletResponse;

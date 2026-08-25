@@ -1,11 +1,21 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.task;
+package cn.eta.team.eta.domain.task;
 
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.util.PageUtils;
+import cn.eta.team.eta.domain.task.TaskDtos.CategoryCreateRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.CategoryVO;
+import cn.eta.team.eta.domain.task.TaskDtos.CreateRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.QueryRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.StatusRequest;
+import cn.eta.team.eta.domain.task.TaskDtos.UpdateRequest;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -13,13 +23,6 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-
-import cn.eta.team.eta.task.TaskDtos.CategoryCreateRequest;
-import cn.eta.team.eta.task.TaskDtos.CategoryVO;
-import cn.eta.team.eta.task.TaskDtos.CreateRequest;
-import cn.eta.team.eta.task.TaskDtos.QueryRequest;
-import cn.eta.team.eta.task.TaskDtos.StatusRequest;
-import cn.eta.team.eta.task.TaskDtos.UpdateRequest;
 
 /**
  * 任务业务：以当前登录用户为数据边界（ownerId 隔离）。
@@ -44,24 +47,16 @@ public class TaskService {
     /** 分页查询当前用户的任务（支持状态 / 分类 / 关键词筛选） */
     @Transactional(readOnly = true)
     public Paged<Task> list(String ownerId, QueryRequest q) {
-        int page = PageUtils.page(q.page());
+        int pageNum = q.page() != null ? q.page() - 1 : 0;
+        int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
-        List<Task> tasks = taskRepository.findByOwnerId(ownerId);
-        String kw = q.keyword() == null ? "" : q.keyword().trim().toLowerCase();
+        Pageable pageable = PageRequest.of(page, size);
 
-        List<Task> filtered = tasks.stream()
-                .filter(t -> q.status() == null || q.status().isBlank() || q.status().equals("all") || q.status().equals(t.getStatus()))
-                .filter(t -> q.categoryId() == null || q.categoryId().isBlank() || q.categoryId().equals(t.getCategoryId()))
-                .filter(t -> kw.isEmpty()
-                        || (t.getTitle() != null && t.getTitle().toLowerCase().contains(kw))
-                        || (t.getTag() != null && t.getTag().toLowerCase().contains(kw)))
-                .toList();
+        String keyword = q.keyword() == null ? null : q.keyword().trim();
+        Page<Task> taskPage = taskRepository.findByOwnerIdWithFilters(
+                ownerId, q.status(), q.categoryId(), keyword, pageable);
 
-        int total = filtered.size();
-        int from = Math.min(page * size, total);
-        int to = Math.min(from + size, total);
-        List<Task> slice = filtered.subList(from, to);
-        return Paged.of(slice, total, page, size);
+        return Paged.of(taskPage);
     }
 
     @Transactional(readOnly = true)

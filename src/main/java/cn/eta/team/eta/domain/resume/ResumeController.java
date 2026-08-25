@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.resume;
+package cn.eta.team.eta.domain.resume;
 import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;
 import cn.eta.team.eta.common.util.JsonUtils;
-import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
-import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
-import cn.eta.team.eta.resume.ResumeDtos.UpdateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.CreateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.QueryRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.UpdateRequest;
 import cn.eta.team.eta.security.EtaPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * 简历制作
  *
- * @author StarLeaf-Roxy
+ * @author StarLeaf-Roxy ormisnal
  * @since 2026-08-24
  */
 @RestController
@@ -72,7 +72,7 @@ public class ResumeController {
 
     @PutMapping("/{id}")
     public Result<Resume> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
-            @RequestBody UpdateRequest q) {
+            @Valid @RequestBody UpdateRequest q) {
         return Result.ok(resumeService.update(p.userId(), id, q));
     }
 

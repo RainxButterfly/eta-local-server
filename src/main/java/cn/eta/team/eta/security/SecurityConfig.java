@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // 文件下载
                         .requestMatchers("/download/**").permitAll()
+                        // ocr服务
+                        .requestMatchers("/ocr/**").permitAll()
                         // 其余均需认证
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))

@@ -1,4 +1,6 @@
-package cn.eta.team.eta.resume;
+// SPDX-FileCopyrightText: 2026 RainxButterfly
+// SPDX-License-Identifier: AGPL-3.0-or-later
+package cn.eta.team.eta.domain.resume;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -15,9 +17,9 @@ import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.util.FileStorageUtils;
 import cn.eta.team.eta.common.util.JsonUtils;
 import cn.eta.team.eta.common.util.PageUtils;
-import cn.eta.team.eta.resume.ResumeDtos.CreateRequest;
-import cn.eta.team.eta.resume.ResumeDtos.QueryRequest;
-import cn.eta.team.eta.resume.ResumeDtos.UpdateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.CreateRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.QueryRequest;
+import cn.eta.team.eta.domain.resume.ResumeDtos.UpdateRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,7 +29,8 @@ public class ResumeService {
 
     @Transactional(readOnly = true)
     public Paged<Resume> list(String ownerId, QueryRequest q) {
-        int page = PageUtils.page(q.page() - 1);
+        int pageNum = q.page() != null ? q.page() - 1 : 0;
+        int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
         Pageable pageable = PageRequest.of(page, size);
 
@@ -42,19 +45,18 @@ public class ResumeService {
         resume.setOwnerId(ownerId);
         resume.setName(q.name());
         resume.setTemplateId(q.templateId());
-
         resume.setContent(q.content());
         return resumeRepository.save(resume);
     }
 
     @Transactional(readOnly = true)
     public Resume detail(String id, String ownerId) {
-        return requireOwnedTask(id, ownerId);
+        return requireOwnedResume(id, ownerId);
     }
 
     @Transactional
     public Resume update(String userId, String id, UpdateRequest q) {
-        Resume resume = requireOwnedTask(id, userId);
+        Resume resume = requireOwnedResume(id, userId);
         if (q.name() != null) {
             resume.setName(q.name());
         }
@@ -65,49 +67,51 @@ public class ResumeService {
         return resumeRepository.save(resume);
     }
 
+    @Transactional
     public void delete(String userId, String id) {
-        Resume resume = requireOwnedTask(id, userId);
+        Resume resume = requireOwnedResume(id, userId);
         resumeRepository.delete(resume);
     }
 
-    private Resume requireOwnedTask(String id, String ownerId) {
+    private Resume requireOwnedResume(String id, String ownerId) {
         return resumeRepository.findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new BizException(ErrorCode.RESUME_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
     public String export(String userId, String id, String format) {
-        Resume resume = requireOwnedTask(id, userId);
+        Resume resume = requireOwnedResume(id, userId);
         byte[] fileContent;
         String fileName = "resume_" + resume.getId() + "." + format;
         try {
             if ("json".equalsIgnoreCase(format)) {
                 fileContent = exportJson(resume);
             } else if ("pdf".equalsIgnoreCase(format)) {
-                fileContent = exportPdf(resume);
+                throw new BizException(ErrorCode.RESUME_EXPORT_FAILED, "PDF 导出暂未支持");
             } else if ("markdown".equalsIgnoreCase(format) || "md".equalsIgnoreCase(format)) {
                 fileContent = exportMarkdown(resume);
             } else {
                 throw new BizException(ErrorCode.RESUME_EXPORT_FAILED, "不支持的导出格式: " + format);
             }
         } catch (IOException e) {
-            throw new RuntimeException("文件导出失败", e);
+            throw new BizException(ErrorCode.RESUME_EXPORT_FAILED, "文件导出失败");
         }
         FileStorageUtils.saveToLocal(fileContent, fileName);
         return fileName;
     }
 
-    private byte[] exportMarkdown(Resume resume) throws IOException {
+    private byte[] exportMarkdown(Resume resume) {
+        ResumeContent content = resume.getContent();
         StringBuilder md = new StringBuilder();
-        md.append("# ").append(resume.getContent().getName()).append("\n\n");
-        md.append("**岗位**: ").append(resume.getContent().getRole()).append("\n");
-        md.append("**邮箱**: ").append(resume.getContent().getEmail()).append("\n");
-        md.append("**电话**: ").append(resume.getContent().getPhone()).append("\n\n");
+        if (content != null) {
+            md.append("# ").append(content.getName()).append("\n\n");
+            md.append("**岗位**: ").append(content.getRole()).append("\n");
+            md.append("**邮箱**: ").append(content.getEmail()).append("\n");
+            md.append("**电话**: ").append(content.getPhone()).append("\n\n");
 
-        if (resume.getContent() != null) {
-            if (resume.getContent().getEducation() != null) {
+            if (content.getEducation() != null) {
                 md.append("## 教育经历\n");
-                for (var edu : resume.getContent().getEducation()) {
+                for (var edu : content.getEducation()) {
                     md.append("- **").append(edu.getTitle()).append("**");
                     if (edu.getSubtitle() != null)
                         md.append(" (").append(edu.getSubtitle()).append(")");
@@ -117,9 +121,9 @@ public class ResumeService {
                 }
             }
 
-            if (resume.getContent().getExperience() != null) {
+            if (content.getExperience() != null) {
                 md.append("\n## 工作经历\n");
-                for (var exp : resume.getContent().getExperience()) {
+                for (var exp : content.getExperience()) {
                     md.append("- **").append(exp.getTitle()).append("**");
                     if (exp.getSubtitle() != null)
                         md.append(" (").append(exp.getSubtitle()).append(")");
@@ -129,9 +133,9 @@ public class ResumeService {
                 }
             }
 
-            if (resume.getContent().getProjects() != null) {
+            if (content.getProjects() != null) {
                 md.append("\n## 项目经历\n");
-                for (var exp : resume.getContent().getProjects()) {
+                for (var exp : content.getProjects()) {
                     md.append("- **").append(exp.getTitle()).append("**");
                     if (exp.getSubtitle() != null)
                         md.append(" (").append(exp.getSubtitle()).append(")");
@@ -141,9 +145,9 @@ public class ResumeService {
                 }
             }
 
-            if (resume.getContent().getSkills() != null) {
+            if (content.getSkills() != null) {
                 md.append("\n## 技能\n");
-                md.append(String.join("  ", resume.getContent().getSkills()));
+                md.append(String.join("  ", content.getSkills()));
             }
         }
         return md.toString().getBytes();
@@ -152,10 +156,5 @@ public class ResumeService {
     private byte[] exportJson(Resume resume) throws IOException {
         String json = JsonUtils.toJsonPretty(resume);
         return json.getBytes();
-    }
-
-    private byte[] exportPdf(Resume resume) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'exportPdf'");
     }
 }
