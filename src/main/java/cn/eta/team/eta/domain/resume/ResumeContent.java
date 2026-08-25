@@ -1,6 +1,7 @@
 package cn.eta.team.eta.domain.resume;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResumeContent {
+    @NotBlank(message = "简历名称不能为空")
     private String name;
     private String role;
     private String email;

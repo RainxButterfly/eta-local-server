@@ -19,7 +19,7 @@ public final class ResumeDtos {
     public record CreateRequest(
             @NotBlank(message = "简历标题不能为空") String name,
             @NotBlank(message = "简历模板ID不能为空") String templateId,
-            @NotNull(message = "简历内容不能为空") @Valid ResumeContent content) {
+            @Valid ResumeContent content) {
     }
 
     /** 简历更新入参 */
