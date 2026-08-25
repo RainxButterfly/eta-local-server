@@ -116,6 +116,12 @@
 			<artifactId>tess4j</artifactId>
 			<version>LATEST</version>
 		</dependency>
+		<!--FSRS-->
+		<dependency>
+			<groupId>io.github.open-spaced-repetition</groupId>
+			<artifactId>fsrs</artifactId>
+			<version>LATEST</version>
+		</dependency>
 	</dependencies>
 
 	<build>

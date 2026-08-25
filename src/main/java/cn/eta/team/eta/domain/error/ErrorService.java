@@ -1,8 +1,10 @@
 package cn.eta.team.eta.domain.error;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,14 +18,21 @@ import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.util.PageUtils;
 import cn.eta.team.eta.domain.error.ErrorDtos.CreateRequest;
 import cn.eta.team.eta.domain.error.ErrorDtos.QueryRequest;
+import cn.eta.team.eta.domain.error.ErrorDtos.ReviewSubmitRequest;
+import cn.eta.team.eta.domain.error.ErrorDtos.ReviewSubmitVO;
 import cn.eta.team.eta.domain.error.ErrorDtos.SubjectStat;
 import cn.eta.team.eta.domain.error.ErrorDtos.UpdateRequest;
+import io.github.openspacedrepetition.Card;
+import io.github.openspacedrepetition.CardAndReviewLog;
+import io.github.openspacedrepetition.Rating;
+import io.github.openspacedrepetition.Scheduler;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ErrorService {
     private final ErrorRepository errorRepository;
+    private final Scheduler fsrsScheduler;
 
     @Transactional(readOnly = true)
     public Paged<Error> list(String ownerId, QueryRequest q) {
@@ -51,11 +60,15 @@ public class ErrorService {
         error.setSubject(q.subject());
         error.setSource(q.source());
         error.setLevel(q.level());
-        // TODO 这是啥字段
         error.setTone(null);
         if (q.tags() != null && !q.tags().isEmpty()) {
             error.setTags(q.tags());
         }
+
+        error.setDifficulty(0);
+        error.setStability(0);
+        error.setLastReviewAt(null);
+        error.setNextReviewAt(Instant.now().plusSeconds(86400L));
         return errorRepository.save(error);
     }
 
@@ -63,11 +76,10 @@ public class ErrorService {
     public Error detail(String ownerId, String id) {
         return requireOwnedError(ownerId, id);
     }
-    
 
     private Error requireOwnedError(String ownerId, String id) {
         return errorRepository.findByIdAndOwnerId(id, ownerId)
-            .orElseThrow(() -> new BizException(ErrorCode.ERROR_NOT_FOUND));
+                .orElseThrow(() -> new BizException(ErrorCode.ERROR_NOT_FOUND));
     }
 
     @Transactional
@@ -99,5 +111,49 @@ public class ErrorService {
         return results.stream()
                 .map(row -> new SubjectStat((String) row[0], ((Number) row[1]).longValue()))
                 .collect(Collectors.toList());
+    }
+
+    public List<Error> review(String ownerId) {
+        List<Error> errors = errorRepository.findByOwnerIdAndNextReviewAtLessThanEqual(ownerId, Instant.now());
+        return errors;
+    }
+
+    @Transactional
+    public ReviewSubmitVO submitReview(String ownerId, String errorId, ReviewSubmitRequest q) {
+        Error error = requireOwnedError(ownerId, errorId);
+
+        // 构建 FSRS Card 对象
+        Card oldCard = Card.builder()
+                .difficulty(error.getDifficulty())
+                .stability(error.getStability())
+                .lastReview(error.getLastReviewAt() != null
+                        ? error.getLastReviewAt()
+                        : error.getCreatedAt()) // 若从未复习，以创建时间为准
+                .due(error.getNextReviewAt())
+                .build();
+
+        Rating rating = mapQualityToRating(q.remembered());
+
+        CardAndReviewLog result = fsrsScheduler.reviewCard(oldCard, rating);
+        Card newCard = result.card();
+
+        error.setDifficulty(newCard.getDifficulty());
+        error.setStability(newCard.getStability());
+        error.setLastReviewAt(Instant.now());
+        error.setNextReviewAt(newCard.getDue());
+        // 当稳定性间隔大于365天时标记为已掌握
+        error.setMastered(newCard.getStability() > 365.0);
+        error.setWrongCount(q.remembered() ? error.getWrongCount() : error.getWrongCount() + 1);
+        error.setLastWrongAt(q.remembered() ? error.getLastWrongAt() : Instant.now());
+
+        errorRepository.save(error);
+
+        return new ReviewSubmitVO(errorId, false, error.getWrongCount());
+    }
+
+    private Rating mapQualityToRating(boolean remembered) {
+        if (remembered)
+            return Rating.EASY;
+        return Rating.HARD;
     }
 }

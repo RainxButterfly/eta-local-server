@@ -21,7 +21,7 @@ public class Error {
     @Column(length = 36, nullable = false, updatable = false)
     private String id;
 
-    @Column(length =  36, nullable = false)
+    @Column(length = 36, nullable = false)
     private String ownerId;
 
     @Column(columnDefinition = "TEXT", nullable = false)
@@ -35,11 +35,9 @@ public class Error {
     @Column(length = 128)
     private String source;
 
-    // TODO 这是啥字段
     @Column(length = 20)
     private String level;
 
-    //TODO 这是啥字段
     @Column(length = 20)
     private String tone;
 
@@ -58,4 +56,11 @@ public class Error {
     @CollectionTable(name = "error_tags", joinColumns = @JoinColumn(name = "error_id"))
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
+
+    //FSRS所需字段
+    private double difficulty = 0.0;
+
+    private double stability = 0.0;
+
+    private Instant lastReviewAt;
 }

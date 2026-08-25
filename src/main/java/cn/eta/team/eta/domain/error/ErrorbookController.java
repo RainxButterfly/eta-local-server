@@ -6,6 +6,8 @@ import cn.eta.team.eta.common.Paged;
 import cn.eta.team.eta.common.Result;
 import cn.eta.team.eta.domain.error.ErrorDtos.CreateRequest;
 import cn.eta.team.eta.domain.error.ErrorDtos.QueryRequest;
+import cn.eta.team.eta.domain.error.ErrorDtos.ReviewSubmitRequest;
+import cn.eta.team.eta.domain.error.ErrorDtos.ReviewSubmitVO;
 import cn.eta.team.eta.domain.error.ErrorDtos.SubjectStat;
 import cn.eta.team.eta.domain.error.ErrorDtos.UpdateRequest;
 import cn.eta.team.eta.security.EtaPrincipal;
@@ -20,7 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -72,14 +73,13 @@ public class ErrorbookController {
 
     /** 今日应复习错题 */
     @GetMapping("/review")
-    public Result<List<Error>> review() {
-        return Result.ok(List.of());
+    public Result<List<Error>> review(@AuthenticationPrincipal EtaPrincipal p) {
+        return Result.ok(errorService.review(p.userId()));
     }
 
     /** 提交复习结果 */
     @PostMapping("/{id}/review")
-    public Result<Map<String, Object>> submitReview(@PathVariable String id,
-                                                    @RequestBody Map<String, Object> body) {
-        return Result.ok(Map.of("id", id, "remembered", body.getOrDefault("remembered", false)));
+    public Result<ReviewSubmitVO> submitReview(@AuthenticationPrincipal EtaPrincipal p,@PathVariable String id,@RequestBody ReviewSubmitRequest q) {
+        return Result.ok(errorService.submitReview(p.userId(), id, q));                                         
     }
 }
