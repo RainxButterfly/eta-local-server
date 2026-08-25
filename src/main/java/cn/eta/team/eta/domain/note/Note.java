@@ -40,7 +40,7 @@ public class Note {
 
     @ManyToMany
     @JoinTable(
-        name = "note_note_tag",
+        name = "eta_note_tag",
         joinColumns = @JoinColumn(name = "note_id"),
         inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
