@@ -5,6 +5,7 @@ package cn.eta.team.eta.domain.note;
 import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 笔记模块 DTO。
@@ -32,8 +33,8 @@ public final class NoteDtos {
         public record QueryRequest(
                         String keyword,
                         String tag,
-                        Integer page,
-                        Integer pageSize) {
+                        @NotNull(message = "不能为空") Integer page,
+                        @NotNull(message = "不能为空")Integer pageSize) {
         }
 
         public record CreateTagRequest(

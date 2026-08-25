@@ -44,8 +44,8 @@ public final class ErrorDtos {
 
         /** 分页查询入参 */
         public record QueryRequest(
-                        Integer page,
-                        Integer pageSize,
+                        @NotNull(message = "不能为空") Integer page,
+                        @NotNull(message = "不能为空") Integer pageSize,
                         String subject) {
         }
 

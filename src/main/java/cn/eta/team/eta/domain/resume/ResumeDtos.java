@@ -4,6 +4,7 @@ package cn.eta.team.eta.domain.resume;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 简历模块 DTO。
@@ -31,7 +32,7 @@ public final class ResumeDtos {
 
         /** 分页查询入参 */
         public record QueryRequest(
-                        Integer page,
-                        Integer pageSize) {
+                        @NotNull(message = "不能为空") Integer page,
+                        @NotNull(message = "不能为空") Integer pageSize) {
         }
 }
