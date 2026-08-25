@@ -1,14 +1,15 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
+// SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.auth;
 
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.security.JwtService;
+import cn.eta.team.eta.tenant.TenantContext;
+import cn.eta.team.eta.tenant.UserDatabaseInitializer;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,104 +20,132 @@ import cn.eta.team.eta.auth.AuthDtos.RegisterRequest;
 import cn.eta.team.eta.auth.AuthDtos.UpdateProfileRequest;
 import cn.eta.team.eta.auth.AuthDtos.UserVO;
 
-/**
- * 认证业务：注册 / 登录 / 当前用户 / 更新资料 / 改密。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final UserAccountRepository userAccountRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserDatabaseInitializer userDatabaseInitializer;
 
-    public AuthService(UserRepository userRepository,
+    public AuthService(UserAccountRepository userAccountRepository,
+                       UserProfileRepository userProfileRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
-        this.userRepository = userRepository;
+                       JwtService jwtService,
+                       UserDatabaseInitializer userDatabaseInitializer) {
+        this.userAccountRepository = userAccountRepository;
+        this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.userDatabaseInitializer = userDatabaseInitializer;
     }
 
-    @Transactional
     public LoginResponse register(RegisterRequest req) {
-        if (userRepository.existsByEmail(req.email())) {
+        if (userAccountRepository.existsByEmail(req.email())) {
             throw new BizException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
-        User user = new User();
-        user.setEmail(req.email());
-        user.setNickname(req.nickname());
-        user.setPasswordHash(passwordEncoder.encode(req.password()));
-        userRepository.save(user);
-        return buildLoginResponse(user);
+
+        UserAccount account = new UserAccount();
+        account.setEmail(req.email());
+        account.setPasswordHash(passwordEncoder.encode(req.password()));
+        userAccountRepository.save(account);
+
+        userDatabaseInitializer.createDatabase(account.getId());
+
+        UserProfile profile = new UserProfile();
+        profile.setId(account.getId());
+        profile.setNickname(req.nickname());
+
+        TenantContext.set(account.getId());
+        try {
+            userProfileRepository.save(profile);
+        } finally {
+            TenantContext.clear();
+        }
+
+        return buildLoginResponse(account, profile);
     }
 
-    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest req) {
-        User user = userRepository.findByEmail(req.email())
+        UserAccount account = userAccountRepository.findByEmail(req.email())
                 .orElseThrow(() -> new BizException(ErrorCode.EMAIL_OR_PASSWORD_ERROR));
-        if (user.isDisabled()) {
+        if (account.isDisabled()) {
             throw new BizException(ErrorCode.ACCOUNT_DISABLED);
         }
-        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(req.password(), account.getPasswordHash())) {
             throw new BizException(ErrorCode.EMAIL_OR_PASSWORD_ERROR);
         }
-        return buildLoginResponse(user);
+
+        userDatabaseInitializer.ensureDatabase(account.getId());
+
+        UserProfile profile;
+        TenantContext.set(account.getId());
+        try {
+            profile = userProfileRepository.findById(account.getId()).orElse(null);
+        } finally {
+            TenantContext.clear();
+        }
+
+        return buildLoginResponse(account, profile);
     }
 
-    @Transactional(readOnly = true)
     public UserVO me(String userId) {
-        User user = requireUser(userId);
-        return UserVO.from(user);
+        UserAccount account = TenantContext.runAsDefault(() -> requireAccount(userId));
+        UserProfile profile = userProfileRepository.findById(userId).orElse(null);
+        return UserVO.from(account, profile);
     }
 
-    @Transactional
     public UserVO updateProfile(String userId, UpdateProfileRequest req) {
-        User user = requireUser(userId);
-        user.setNickname(req.nickname());
+        UserProfile profile = userProfileRepository.findById(userId)
+                .orElseGet(() -> {
+                    UserProfile p = new UserProfile();
+                    p.setId(userId);
+                    return p;
+                });
+        profile.setNickname(req.nickname());
         if (req.bio() != null) {
-            user.setBio(req.bio());
+            profile.setBio(req.bio());
         }
         if (req.avatar() != null) {
-            user.setAvatar(req.avatar());
+            profile.setAvatar(req.avatar());
         }
-        userRepository.save(user);
-        return UserVO.from(user);
+        userProfileRepository.save(profile);
+
+        UserAccount account = TenantContext.runAsDefault(() -> requireAccount(userId));
+        return UserVO.from(account, profile);
     }
 
-    @Transactional
     public void changePassword(String userId, AuthDtos.ChangePasswordRequest req) {
-        User user = requireUser(userId);
-        if (!passwordEncoder.matches(req.oldPassword(), user.getPasswordHash())) {
-            throw new BizException(ErrorCode.BAD_REQUEST, "旧密码不正确");
-        }
-        user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
-        userRepository.save(user);
+        TenantContext.runAsDefault(() -> {
+            UserAccount account = requireAccount(userId);
+            if (!passwordEncoder.matches(req.oldPassword(), account.getPasswordHash())) {
+                throw new BizException(ErrorCode.BAD_REQUEST, "旧密码不正确");
+            }
+            account.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+            userAccountRepository.save(account);
+            return null;
+        });
     }
 
-    /** logout 采用无状态 JWT，前端删除本地令牌即可；此处可扩展为令牌黑名单。 */
     public void logout() {
-        // no-op：Token 服务端不保存，天然无状态登出
     }
 
-    /** 仅供其他模块使用：解析令牌得到 userId。 */
     public String resolveUserId(String token) {
         Claims claims = jwtService.parse(token);
         return jwtService.getUserId(claims);
     }
 
-    private LoginResponse buildLoginResponse(User user) {
+    private LoginResponse buildLoginResponse(UserAccount account, UserProfile profile) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getId());
-        claims.put("email", user.getEmail());
+        claims.put("userId", account.getId());
+        claims.put("email", account.getEmail());
         String token = jwtService.generateToken(claims);
-        return new LoginResponse(token, UserVO.from(user));
+        return new LoginResponse(token, UserVO.from(account, profile));
     }
 
-    private User requireUser(String userId) {
-        return userRepository.findById(userId)
+    private UserAccount requireAccount(String userId) {
+        return userAccountRepository.findById(userId)
                 .orElseThrow(() -> new BizException(ErrorCode.UNAUTHORIZED));
     }
 }

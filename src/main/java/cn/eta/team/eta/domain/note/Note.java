@@ -30,9 +30,6 @@ public class Note {
     private String id;
 
     @Column(nullable = false)
-    private String ownerId;
-
-    @Column(nullable = false)
     private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")

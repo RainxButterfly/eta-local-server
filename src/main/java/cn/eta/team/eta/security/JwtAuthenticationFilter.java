@@ -1,7 +1,9 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
+// SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.security;
 
+import cn.eta.team.eta.tenant.TenantContext;
+import cn.eta.team.eta.tenant.UserDatabaseInitializer;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,14 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * JWT 认证过滤器：从 Authorization: Bearer <token> 中解析令牌。
- * 校验通过后，将带 userId 的认证信息写入 SecurityContext。
- * 校验失败（缺失/无效/过期）不在此抛错，交由 Security 401 兜底。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -32,9 +26,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+    private final UserDatabaseInitializer userDatabaseInitializer;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                    UserDatabaseInitializer userDatabaseInitializer) {
         this.jwtService = jwtService;
+        this.userDatabaseInitializer = userDatabaseInitializer;
     }
 
     @Override
@@ -48,17 +45,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = jwtService.getUserId(claims);
                 String email = claims.get("email", String.class);
 
-                // 轻量 principal：只携带标识符，脏检查由各 Service 通过 CurrentUser 读取
+                userDatabaseInitializer.ensureRegistered(userId);
+
                 EtaPrincipal principal = new EtaPrincipal(userId, email);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(principal, null, List.of());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                TenantContext.set(userId);
             } catch (Exception ignored) {
-                // 令牌无效或过期：保持未认证状态即可
             }
         }
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     private String resolveToken(HttpServletRequest request) {

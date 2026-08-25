@@ -28,21 +28,19 @@ public class ResumeService {
     private final ResumeRepository resumeRepository;
 
     @Transactional(readOnly = true)
-    public Paged<Resume> list(String ownerId, QueryRequest q) {
+    public Paged<Resume> list(QueryRequest q) {
         int pageNum = q.page() != null ? q.page() - 1 : 0;
         int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Resume> resumePage = resumeRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId, pageable);
-
+        Page<Resume> resumePage = resumeRepository.findAllByOrderByCreatedAtDesc(pageable);
         return Paged.of(resumePage);
     }
 
     @Transactional
-    public Resume create(String ownerId, CreateRequest q) {
+    public Resume create(CreateRequest q) {
         Resume resume = new Resume();
-        resume.setOwnerId(ownerId);
         resume.setName(q.name());
         resume.setTemplateId(q.templateId());
         resume.setContent(q.content());
@@ -50,13 +48,13 @@ public class ResumeService {
     }
 
     @Transactional(readOnly = true)
-    public Resume detail(String id, String ownerId) {
-        return requireOwnedResume(id, ownerId);
+    public Resume detail(String id) {
+        return requireResume(id);
     }
 
     @Transactional
-    public Resume update(String userId, String id, UpdateRequest q) {
-        Resume resume = requireOwnedResume(id, userId);
+    public Resume update(String id, UpdateRequest q) {
+        Resume resume = requireResume(id);
         if (q.name() != null) {
             resume.setName(q.name());
         }
@@ -68,19 +66,19 @@ public class ResumeService {
     }
 
     @Transactional
-    public void delete(String userId, String id) {
-        Resume resume = requireOwnedResume(id, userId);
+    public void delete(String id) {
+        Resume resume = requireResume(id);
         resumeRepository.delete(resume);
     }
 
-    private Resume requireOwnedResume(String id, String ownerId) {
-        return resumeRepository.findByIdAndOwnerId(id, ownerId)
+    private Resume requireResume(String id) {
+        return resumeRepository.findById(id)
                 .orElseThrow(() -> new BizException(ErrorCode.RESUME_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
-    public String export(String userId, String id, String format) {
-        Resume resume = requireOwnedResume(id, userId);
+    public String export(String id, String format) {
+        Resume resume = requireResume(id);
         byte[] fileContent;
         String fileName = "resume_" + resume.getId() + "." + format;
         try {

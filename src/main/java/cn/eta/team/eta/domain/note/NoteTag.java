@@ -6,7 +6,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
@@ -18,9 +17,7 @@ import org.hibernate.annotations.UuidGenerator;
  * @since 2026-08-24
  */
 @Entity
-@Table(name = "note_tag", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_note_tag_owner_name", columnNames = {"owner_id", "name"})
-})
+@Table(name = "note_tag")
 @Getter
 @Setter
 public class NoteTag {
@@ -30,10 +27,7 @@ public class NoteTag {
     @Column(length = 36)
     private String id;
 
-    @Column(nullable = false, length = 36)
-    private String ownerId;
-
-    @Column(nullable = false, length = 64)
+    @Column(nullable = false, unique = true, length = 64)
     private String name;
 
     @Column(length = 20)

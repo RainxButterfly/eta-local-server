@@ -1,6 +1,6 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
+// SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.domain.task;
+package cn.eta.team.eta.auth;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,25 +10,26 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
-/**
- * 任务分类实体。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
+import java.time.Instant;
+
 @Entity
-@Table(name = "eta_task_category")
+@Table(name = "eta_user_account")
 @Getter
 @Setter
-public class TaskCategory {
+public class UserAccount {
 
     @Id
     @UuidGenerator
     @Column(length = 36)
     private String id;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(nullable = false, unique = true, length = 128)
+    private String email;
 
-    private String color;
+    @Column(nullable = false)
+    private String passwordHash;
+
+    private boolean disabled = false;
+
+    private Instant createdAt = Instant.now();
 }

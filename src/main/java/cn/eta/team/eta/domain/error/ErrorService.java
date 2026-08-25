@@ -36,7 +36,7 @@ public class ErrorService {
     private final Scheduler fsrsScheduler;
 
     @Transactional(readOnly = true)
-    public Paged<Error> list(String ownerId, QueryRequest q) {
+    public Paged<Error> list(QueryRequest q) {
         int pageNum = q.page() != null ? q.page() - 1 : 0;
         int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
@@ -45,18 +45,17 @@ public class ErrorService {
         Page<Error> errorPage;
         String subject = q.subject();
         if (subject != null && !subject.isBlank()) {
-            errorPage = errorRepository.findByOwnerIdAndSubjectContaining(ownerId, subject, pageable);
+            errorPage = errorRepository.findBySubjectContaining(subject, pageable);
         } else {
-            errorPage = errorRepository.findByOwnerId(ownerId, pageable);
+            errorPage = errorRepository.findAll(pageable);
         }
 
         return Paged.of(errorPage);
     }
 
     @Transactional
-    public Error create(String ownerId, CreateRequest q) {
+    public Error create(CreateRequest q) {
         Error error = new Error();
-        error.setOwnerId(ownerId);
         error.setQuestion(q.question());
         error.setAnswer(q.answer());
         error.setSubject(q.subject());
@@ -74,18 +73,18 @@ public class ErrorService {
     }
 
     @Transactional(readOnly = true)
-    public Error detail(String ownerId, String id) {
-        return requireOwnedError(ownerId, id);
+    public Error detail(String id) {
+        return requireError(id);
     }
 
-    private Error requireOwnedError(String ownerId, String id) {
-        return errorRepository.findByIdAndOwnerId(id, ownerId)
+    private Error requireError(String id) {
+        return errorRepository.findById(id)
                 .orElseThrow(() -> new BizException(ErrorCode.ERROR_NOT_FOUND));
     }
 
     @Transactional
-    public Error update(String ownerId, String id, UpdateRequest q) {
-        Error error = requireOwnedError(ownerId, id);
+    public Error update(String id, UpdateRequest q) {
+        Error error = requireError(id);
 
         if (q.question() != null) {
             error.setQuestion(q.question());
@@ -101,26 +100,26 @@ public class ErrorService {
     }
 
     @Transactional
-    public void remove(String ownerId, String id) {
-        Error error = requireOwnedError(ownerId, id);
+    public void remove(String id) {
+        Error error = requireError(id);
         errorRepository.delete(error);
     }
 
     @Transactional(readOnly = true)
-    public List<SubjectStat> getSubjectStats(String ownerId) {
-        List<Object[]> results = errorRepository.countBySubject(ownerId);
+    public List<SubjectStat> getSubjectStats() {
+        List<Object[]> results = errorRepository.countBySubject();
         return results.stream()
                 .map(row -> new SubjectStat((String) row[0], ((Number) row[1]).intValue()))
                 .collect(Collectors.toList());
     }
 
-    public List<Error> review(String ownerId) {
-        return errorRepository.findByOwnerIdAndNextReviewAtLessThanEqual(ownerId, Instant.now());
+    public List<Error> review() {
+        return errorRepository.findByNextReviewAtLessThanEqual(Instant.now());
     }
 
     @Transactional
-    public ReviewSubmitVO submitReview(String ownerId, String errorId, ReviewSubmitRequest q) {
-        Error error = requireOwnedError(ownerId, errorId);
+    public ReviewSubmitVO submitReview(String errorId, ReviewSubmitRequest q) {
+        Error error = requireError(errorId);
 
         boolean remembered = Boolean.TRUE.equals(q.remembered());
 

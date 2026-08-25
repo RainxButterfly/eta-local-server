@@ -23,9 +23,6 @@ public class Error {
     @Column(length = 36, nullable = false, updatable = false)
     private String id;
 
-    @Column(length = 36, nullable = false)
-    private String ownerId;
-
     @Column(columnDefinition = "TEXT", nullable = false)
     private String question;
 

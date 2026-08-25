@@ -31,9 +31,6 @@ public class Resume {
     private String id;
 
     @Column(nullable = false)
-    private String ownerId;
-
-    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)

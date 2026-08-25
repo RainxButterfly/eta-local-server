@@ -15,19 +15,17 @@ import org.springframework.data.jpa.repository.Query;
 public interface ErrorRepository extends JpaRepository<Error, String> {
 
     @EntityGraph(attributePaths = { "tags" })
-    Page<Error> findByOwnerIdAndSubjectContaining(String ownerId, String subject, Pageable pageable);
+    Page<Error> findBySubjectContaining(String subject, Pageable pageable);
 
     @EntityGraph(attributePaths = { "tags" })
-    Page<Error> findByOwnerId(String ownerId, Pageable pageable);
+    Page<Error> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = { "tags" })
-    Optional<Error> findByIdAndOwnerId(String id, String ownerId);
+    Optional<Error> findById(String id);
 
-    // 统计各学科错题数量（按用户筛选）
-    @Query("SELECT e.subject, COUNT(e) FROM Error e WHERE e.ownerId = :ownerId GROUP BY e.subject ORDER BY COUNT(e) DESC")
-    List<Object[]> countBySubject(String ownerId);
+    @Query("SELECT e.subject, COUNT(e) FROM Error e GROUP BY e.subject ORDER BY COUNT(e) DESC")
+    List<Object[]> countBySubject();
 
     @EntityGraph(attributePaths = { "tags" })
-    List<Error> findByOwnerIdAndNextReviewAtLessThanEqual(String ownerId, Instant now);
-
+    List<Error> findByNextReviewAtLessThanEqual(Instant now);
 }

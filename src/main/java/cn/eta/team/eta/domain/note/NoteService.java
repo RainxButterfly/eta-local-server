@@ -23,12 +23,6 @@ import cn.eta.team.eta.domain.note.NoteDtos.TagStat;
 import cn.eta.team.eta.domain.note.NoteDtos.UpdateRequest;
 import lombok.RequiredArgsConstructor;
 
-/**
- * 笔记业务逻辑层。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
 @Service
 @RequiredArgsConstructor
 public class NoteService {
@@ -37,36 +31,33 @@ public class NoteService {
     private final NoteTagRepository noteTagRepository;
 
     @Transactional(readOnly = true)
-    public Paged<Note> list(String ownerId, QueryRequest q) {
+    public Paged<Note> list(QueryRequest q) {
         int pageNum = q.page() != null ? q.page() - 1 : 0;
         int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Note> notePage = noteRepository.findByOwnerIdWithFilters(
-                ownerId, q.keyword(), q.tag(), pageable);
-
+        Page<Note> notePage = noteRepository.findWithFilters(q.keyword(), q.tag(), pageable);
         return Paged.of(notePage);
     }
 
     @Transactional
-    public Note create(String ownerId, CreateRequest q) {
+    public Note create(CreateRequest q) {
         Note note = new Note();
-        note.setOwnerId(ownerId);
         note.setTitle(q.title());
         note.setBody(q.body());
-        note.setTags(resolveTags(ownerId, q.tagNames()));
+        note.setTags(resolveTags(q.tagNames()));
         return noteRepository.save(note);
     }
 
     @Transactional(readOnly = true)
-    public Note detail(String ownerId, String noteId) {
-        return requireOwnedNote(noteId, ownerId);
+    public Note detail(String noteId) {
+        return requireNote(noteId);
     }
 
     @Transactional
-    public Note update(String ownerId, String noteId, UpdateRequest q) {
-        Note note = requireOwnedNote(noteId, ownerId);
+    public Note update(String noteId, UpdateRequest q) {
+        Note note = requireNote(noteId);
         if (q.title() != null && !q.title().isBlank()) {
             note.setTitle(q.title());
         }
@@ -74,21 +65,21 @@ public class NoteService {
             note.setBody(q.body());
         }
         if (q.tagNames() != null) {
-            note.setTags(resolveTags(ownerId, q.tagNames()));
+            note.setTags(resolveTags(q.tagNames()));
         }
         note.setUpdatedAt(Instant.now());
         return noteRepository.save(note);
     }
 
     @Transactional
-    public void remove(String ownerId, String id) {
-        Note note = requireOwnedNote(id, ownerId);
+    public void remove(String id) {
+        Note note = requireNote(id);
         noteRepository.delete(note);
     }
 
     @Transactional(readOnly = true)
-    public List<TagStat> listTags(String ownerId) {
-        List<Object[]> rows = noteRepository.listTags(ownerId);
+    public List<TagStat> listTags() {
+        List<Object[]> rows = noteRepository.listTags();
         List<TagStat> result = new ArrayList<>(rows.size());
         for (Object[] row : rows) {
             String name = (String) row[0];
@@ -99,26 +90,21 @@ public class NoteService {
     }
 
     @Transactional
-    public NoteTag createTag(String ownerId, CreateTagRequest q) {
-        if (noteTagRepository.existsByOwnerIdAndName(ownerId, q.name())) {
+    public NoteTag createTag(CreateTagRequest q) {
+        if (noteTagRepository.existsByName(q.name())) {
             throw new BizException(ErrorCode.NOTE_TAG_NAME_EXISTS);
         }
         NoteTag tag = new NoteTag();
-        tag.setOwnerId(ownerId);
         tag.setName(q.name());
         tag.setColor(q.color());
         return noteTagRepository.save(tag);
     }
 
     @Transactional
-    public void removeTag(String ownerId, String tagId) {
+    public void removeTag(String tagId) {
         NoteTag tag = noteTagRepository.findById(tagId)
                 .orElseThrow(() -> new BizException(ErrorCode.NOTE_TAG_NOT_FOUND));
-        if (!tag.getOwnerId().equals(ownerId)) {
-            throw new BizException(ErrorCode.NOTE_TAG_NOT_FOUND);
-        }
-        // 先从所有引用该标签的笔记中解绑
-        List<Note> notes = noteRepository.findByOwnerIdAndTagsId(ownerId, tagId);
+        List<Note> notes = noteRepository.findByTagsId(tagId);
         for (Note note : notes) {
             note.getTags().remove(tag);
         }
@@ -126,18 +112,12 @@ public class NoteService {
         noteTagRepository.delete(tag);
     }
 
-    // ---------- 私有辅助 ----------
-
-    private Note requireOwnedNote(String id, String ownerId) {
-        return noteRepository.findByIdAndOwnerId(id, ownerId)
+    private Note requireNote(String id) {
+        return noteRepository.findById(id)
                 .orElseThrow(() -> new BizException(ErrorCode.NOTE_NOT_FOUND));
     }
 
-    /**
-     * 将标签名列表解析为持久化的 NoteTag 实体列表：
-     * 已存在的直接复用，不存在的新建并保存。空名自动跳过。
-     */
-    private List<NoteTag> resolveTags(String ownerId, List<String> tagNames) {
+    private List<NoteTag> resolveTags(List<String> tagNames) {
         if (tagNames == null || tagNames.isEmpty()) {
             return new ArrayList<>();
         }
@@ -147,10 +127,9 @@ public class NoteService {
                 continue;
             }
             String trimmed = name.trim();
-            NoteTag tag = noteTagRepository.findByOwnerIdAndName(ownerId, trimmed)
+            NoteTag tag = noteTagRepository.findByName(trimmed)
                     .orElseGet(() -> {
                         NoteTag t = new NoteTag();
-                        t.setOwnerId(ownerId);
                         t.setName(trimmed);
                         return noteTagRepository.save(t);
                     });

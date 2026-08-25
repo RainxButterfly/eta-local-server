@@ -30,9 +30,6 @@ public class Task {
     @Column(length = 36)
     private String id;
 
-    /** 归属用户 */
-    private String ownerId;
-
     @Column(nullable = false)
     private String title;
 
