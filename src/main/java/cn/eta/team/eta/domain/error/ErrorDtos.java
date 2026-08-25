@@ -3,6 +3,7 @@
 package cn.eta.team.eta.domain.error;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public final class ErrorDtos {
 
         public record ReviewSubmitRequest(
                         String id,
-                        Boolean remembered) {
+                        @NotNull(message = "复习结果不能为空") Boolean remembered) {
         }
 
         public record ReviewSubmitVO(
