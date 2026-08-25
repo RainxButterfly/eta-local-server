@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/License-AGPL--3.0-orange.svg" alt="License" />
 </p>
 
-**简体中文** · [接口文档](../ETA-api.yapi) · [协议](LICENSE)
+**简体中文** · [协议](LICENSE)
 
 </div>
 
