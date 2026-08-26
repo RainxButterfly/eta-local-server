@@ -15,6 +15,8 @@ import cn.eta.team.eta.domain.note.NoteTag;
 import cn.eta.team.eta.domain.note.NoteTagRepository;
 import cn.eta.team.eta.domain.resume.Resume;
 import cn.eta.team.eta.domain.resume.ResumeRepository;
+import cn.eta.team.eta.domain.setting.Setting;
+import cn.eta.team.eta.domain.setting.SettingRepository;
 import cn.eta.team.eta.domain.sync.SyncDtos.DeviceInfo;
 import cn.eta.team.eta.domain.sync.SyncDtos.SyncMeta;
 import cn.eta.team.eta.domain.sync.SyncDtos.SyncRequest;
@@ -55,14 +57,15 @@ public class CloudSyncService {
             new TableConfig("eta_task", Task.class),
             new TableConfig("eta_note", Note.class),
             new TableConfig("eta_error", Error.class),
-            new TableConfig("eta_resume", Resume.class)
+            new TableConfig("eta_resume", Resume.class),
+            new TableConfig("eta_setting", Setting.class)
     );
 
     private static final Map<String, List<String>> MODULE_TABLES = Map.of(
             "tasks", List.of("eta_task", "eta_task_category"),
             "errors", List.of("eta_error"),
             "notes", List.of("eta_note", "note_tag"),
-            "settings", List.of("eta_user_profile", "eta_resume")
+            "settings", List.of("eta_user_profile", "eta_resume", "eta_setting")
     );
 
     private final CloudStorageProvider cloudStorage;
@@ -74,6 +77,7 @@ public class CloudSyncService {
     private final TaskCategoryRepository taskCategoryRepository;
     private final ErrorRepository errorRepository;
     private final ResumeRepository resumeRepository;
+    private final SettingRepository settingRepository;
     private final DeviceIdProvider deviceIdProvider;
     private final EntityManager entityManager;
     private final ObjectMapper objectMapper;
@@ -87,6 +91,7 @@ public class CloudSyncService {
                             TaskCategoryRepository taskCategoryRepository,
                             ErrorRepository errorRepository,
                             ResumeRepository resumeRepository,
+                            SettingRepository settingRepository,
                             DeviceIdProvider deviceIdProvider,
                             EntityManager entityManager,
                             ObjectMapper objectMapper) {
@@ -99,6 +104,7 @@ public class CloudSyncService {
         this.taskCategoryRepository = taskCategoryRepository;
         this.errorRepository = errorRepository;
         this.resumeRepository = resumeRepository;
+        this.settingRepository = settingRepository;
         this.deviceIdProvider = deviceIdProvider;
         this.entityManager = entityManager;
         this.objectMapper = objectMapper;
@@ -254,6 +260,7 @@ public class CloudSyncService {
                 case "eta_note" -> noteRepository.save((Note) entity);
                 case "eta_error" -> errorRepository.save((Error) entity);
                 case "eta_resume" -> resumeRepository.save((Resume) entity);
+                case "eta_setting" -> settingRepository.save((Setting) entity);
             }
         }
     }

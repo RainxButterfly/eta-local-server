@@ -15,13 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
 import java.time.Instant;
 import java.util.List;
 
@@ -35,20 +31,17 @@ public class DataInitializer implements ApplicationRunner {
     private final TaskRepository taskRepository;
     private final TaskCategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
-    private final DataSource dataSource;
 
     public DataInitializer(UserAccountRepository userAccountRepository,
                            UserProfileRepository userProfileRepository,
                            TaskRepository taskRepository,
                            TaskCategoryRepository categoryRepository,
-                           PasswordEncoder passwordEncoder,
-                           DataSource dataSource) {
+                           PasswordEncoder passwordEncoder) {
         this.userAccountRepository = userAccountRepository;
         this.userProfileRepository = userProfileRepository;
         this.taskRepository = taskRepository;
         this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
-        this.dataSource = dataSource;
     }
 
     @Override
