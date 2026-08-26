@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 
@@ -15,6 +16,7 @@ import java.time.Instant;
 @Table(name = "eta_user_profile")
 @Getter
 @Setter
+@SQLRestriction("is_deleted = false")
 public class UserProfile {
 
     @Id
@@ -31,4 +33,12 @@ public class UserProfile {
     private String bio;
 
     private Instant createdAt = Instant.now();
+
+    private Instant updatedAt = Instant.now();
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
+
+    @Column(name = "owner_id", length = 36)
+    private String ownerId;
 }

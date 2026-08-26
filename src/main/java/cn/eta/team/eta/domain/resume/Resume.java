@@ -4,6 +4,7 @@ package cn.eta.team.eta.domain.resume;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.*;
@@ -12,18 +13,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 简历实体。
- *
- * @author ormisnal
- * @since 2026-08-24
- */
 @Entity
 @Table(name = "eta_resume")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLRestriction("is_deleted = false")
 public class Resume {
     @Id
     @UuidGenerator
@@ -50,4 +46,10 @@ public class Resume {
     })
     @Embedded
     private ResumeContent content;
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
+
+    @Column(name = "owner_id", length = 36)
+    private String ownerId;
 }

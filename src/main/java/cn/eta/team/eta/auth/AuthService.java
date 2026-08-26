@@ -5,12 +5,11 @@ package cn.eta.team.eta.auth;
 import cn.eta.team.eta.common.BizException;
 import cn.eta.team.eta.common.ErrorCode;
 import cn.eta.team.eta.security.JwtService;
-import cn.eta.team.eta.tenant.TenantContext;
-import cn.eta.team.eta.tenant.UserDatabaseInitializer;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,18 +26,15 @@ public class AuthService {
     private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final UserDatabaseInitializer userDatabaseInitializer;
 
     public AuthService(UserAccountRepository userAccountRepository,
                        UserProfileRepository userProfileRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService,
-                       UserDatabaseInitializer userDatabaseInitializer) {
+                       JwtService jwtService) {
         this.userAccountRepository = userAccountRepository;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.userDatabaseInitializer = userDatabaseInitializer;
     }
 
     public LoginResponse register(RegisterRequest req) {
@@ -51,18 +47,11 @@ public class AuthService {
         account.setPasswordHash(passwordEncoder.encode(req.password()));
         userAccountRepository.save(account);
 
-        userDatabaseInitializer.createDatabase(account.getId());
-
         UserProfile profile = new UserProfile();
         profile.setId(account.getId());
+        profile.setOwnerId(account.getId());
         profile.setNickname(req.nickname());
-
-        TenantContext.set(account.getId());
-        try {
-            userProfileRepository.save(profile);
-        } finally {
-            TenantContext.clear();
-        }
+        userProfileRepository.save(profile);
 
         return buildLoginResponse(account, profile);
     }
@@ -77,21 +66,12 @@ public class AuthService {
             throw new BizException(ErrorCode.EMAIL_OR_PASSWORD_ERROR);
         }
 
-        userDatabaseInitializer.ensureDatabase(account.getId());
-
-        UserProfile profile;
-        TenantContext.set(account.getId());
-        try {
-            profile = userProfileRepository.findById(account.getId()).orElse(null);
-        } finally {
-            TenantContext.clear();
-        }
-
+        UserProfile profile = userProfileRepository.findById(account.getId()).orElse(null);
         return buildLoginResponse(account, profile);
     }
 
     public UserVO me(String userId) {
-        UserAccount account = TenantContext.runAsDefault(() -> requireAccount(userId));
+        UserAccount account = requireAccount(userId);
         UserProfile profile = userProfileRepository.findById(userId).orElse(null);
         return UserVO.from(account, profile);
     }
@@ -101,6 +81,7 @@ public class AuthService {
                 .orElseGet(() -> {
                     UserProfile p = new UserProfile();
                     p.setId(userId);
+                    p.setOwnerId(userId);
                     return p;
                 });
         profile.setNickname(req.nickname());
@@ -110,22 +91,20 @@ public class AuthService {
         if (req.avatar() != null) {
             profile.setAvatar(req.avatar());
         }
+        profile.setUpdatedAt(Instant.now());
         userProfileRepository.save(profile);
 
-        UserAccount account = TenantContext.runAsDefault(() -> requireAccount(userId));
+        UserAccount account = requireAccount(userId);
         return UserVO.from(account, profile);
     }
 
     public void changePassword(String userId, AuthDtos.ChangePasswordRequest req) {
-        TenantContext.runAsDefault(() -> {
-            UserAccount account = requireAccount(userId);
-            if (!passwordEncoder.matches(req.oldPassword(), account.getPasswordHash())) {
-                throw new BizException(ErrorCode.BAD_REQUEST, "旧密码不正确");
-            }
-            account.setPasswordHash(passwordEncoder.encode(req.newPassword()));
-            userAccountRepository.save(account);
-            return null;
-        });
+        UserAccount account = requireAccount(userId);
+        if (!passwordEncoder.matches(req.oldPassword(), account.getPasswordHash())) {
+            throw new BizException(ErrorCode.BAD_REQUEST, "旧密码不正确");
+        }
+        account.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+        userAccountRepository.save(account);
     }
 
     public void logout() {

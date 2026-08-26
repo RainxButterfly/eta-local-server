@@ -8,20 +8,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
 
-/**
- * 任务实体。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
 @Entity
 @Table(name = "eta_task")
 @Getter
 @Setter
+@SQLRestriction("is_deleted = false")
 public class Task {
 
     /** 使用 UUID 字符串作为主键，与前端字符串 id 对齐 */
@@ -63,4 +59,10 @@ public class Task {
     private Instant createdAt = Instant.now();
 
     private Instant updatedAt = Instant.now();
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
+
+    @Column(name = "owner_id", length = 36)
+    private String ownerId;
 }

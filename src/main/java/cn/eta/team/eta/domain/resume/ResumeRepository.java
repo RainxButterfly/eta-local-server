@@ -14,7 +14,7 @@ public interface ResumeRepository extends JpaRepository<Resume, String> {
     @EntityGraph(attributePaths = {
         "content.education", "content.experience", "content.projects", "content.skills"
     })
-    Page<Resume> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<Resume> findAllByOwnerIdOrderByCreatedAtDesc(String ownerId, Pageable pageable);
 
     @EntityGraph(attributePaths = {
         "content.education", "content.experience", "content.projects", "content.skills"

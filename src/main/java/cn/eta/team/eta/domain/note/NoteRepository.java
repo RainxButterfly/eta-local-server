@@ -14,17 +14,19 @@ public interface NoteRepository extends JpaRepository<Note, String> {
 
     @Query("SELECT DISTINCT n FROM Note n " +
            "LEFT JOIN n.tags t " +
-           "WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(n.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(n.body) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "WHERE n.ownerId = :ownerId " +
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(n.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(n.body) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "AND (:tag IS NULL OR :tag = '' OR LOWER(t.name) = LOWER(:tag)) " +
            "ORDER BY n.createdAt DESC")
-    Page<Note> findWithFilters(@Param("keyword") String keyword,
+    Page<Note> findWithFilters(@Param("ownerId") String ownerId,
+                               @Param("keyword") String keyword,
                                @Param("tag") String tag,
                                Pageable pageable);
 
     @Query("SELECT t.name, " +
-           "(SELECT COUNT(n) FROM Note n JOIN n.tags nt WHERE nt.id = t.id) " +
-           "FROM NoteTag t ORDER BY t.name")
-    List<Object[]> listTags();
+           "(SELECT COUNT(n) FROM Note n JOIN n.tags nt WHERE nt.id = t.id AND n.ownerId = :ownerId) " +
+           "FROM NoteTag t WHERE t.ownerId = :ownerId ORDER BY t.name")
+    List<Object[]> listTags(@Param("ownerId") String ownerId);
 
-    List<Note> findByTagsId(String tagId);
+    List<Note> findByTagsIdAndOwnerId(String tagId, String ownerId);
 }

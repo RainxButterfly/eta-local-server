@@ -4,66 +4,135 @@ package cn.eta.team.eta.domain.sync;
 
 import cn.eta.team.eta.auth.UserAccount;
 import cn.eta.team.eta.auth.UserAccountRepository;
+import cn.eta.team.eta.auth.UserProfile;
+import cn.eta.team.eta.auth.UserProfileRepository;
 import cn.eta.team.eta.common.util.JsonUtils;
+import cn.eta.team.eta.domain.error.Error;
+import cn.eta.team.eta.domain.error.ErrorRepository;
+import cn.eta.team.eta.domain.note.Note;
+import cn.eta.team.eta.domain.note.NoteRepository;
+import cn.eta.team.eta.domain.note.NoteTag;
+import cn.eta.team.eta.domain.note.NoteTagRepository;
+import cn.eta.team.eta.domain.resume.Resume;
+import cn.eta.team.eta.domain.resume.ResumeRepository;
 import cn.eta.team.eta.domain.sync.SyncDtos.DeviceInfo;
 import cn.eta.team.eta.domain.sync.SyncDtos.SyncMeta;
+import cn.eta.team.eta.domain.sync.SyncDtos.SyncRequest;
 import cn.eta.team.eta.domain.sync.SyncDtos.SyncResponse;
 import cn.eta.team.eta.domain.sync.SyncDtos.SyncStatus;
 import cn.eta.team.eta.domain.sync.SyncDtos.UserAccountSnapshot;
-import cn.eta.team.eta.tenant.TenantContext;
-import cn.eta.team.eta.tenant.UserDatabaseInitializer;
-import org.springframework.beans.factory.annotation.Value;
+import cn.eta.team.eta.domain.task.Task;
+import cn.eta.team.eta.domain.task.TaskCategory;
+import cn.eta.team.eta.domain.task.TaskCategoryRepository;
+import cn.eta.team.eta.domain.task.TaskRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
-import javax.sql.DataSource;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CloudSyncService {
 
     private static final String USER_ACCOUNT_KEY = "user-account.json";
-    private static final String USER_DB_BACKUP_KEY = "user-db.backup.zip";
+    private static final String SNAPSHOT_KEY = "snapshot.json";
     private static final String META_KEY = "sync-meta.json";
+
+    private record TableConfig(String tableName, Class<?> entityClass) {
+    }
+
+    private static final List<TableConfig> TABLES = List.of(
+            new TableConfig("note_tag", NoteTag.class),
+            new TableConfig("eta_task_category", TaskCategory.class),
+            new TableConfig("eta_user_profile", UserProfile.class),
+            new TableConfig("eta_task", Task.class),
+            new TableConfig("eta_note", Note.class),
+            new TableConfig("eta_error", Error.class),
+            new TableConfig("eta_resume", Resume.class)
+    );
+
+    private static final Map<String, List<String>> MODULE_TABLES = Map.of(
+            "tasks", List.of("eta_task", "eta_task_category"),
+            "errors", List.of("eta_error"),
+            "notes", List.of("eta_note", "note_tag"),
+            "settings", List.of("eta_user_profile", "eta_resume")
+    );
 
     private final CloudStorageProvider cloudStorage;
     private final UserAccountRepository userAccountRepository;
-    private final UserDatabaseInitializer userDatabaseInitializer;
+    private final UserProfileRepository userProfileRepository;
+    private final NoteRepository noteRepository;
+    private final NoteTagRepository noteTagRepository;
+    private final TaskRepository taskRepository;
+    private final TaskCategoryRepository taskCategoryRepository;
+    private final ErrorRepository errorRepository;
+    private final ResumeRepository resumeRepository;
     private final DeviceIdProvider deviceIdProvider;
-
-    @Value("${eta.user-db.path:./data/users}")
-    private String userDbPath;
+    private final EntityManager entityManager;
+    private final ObjectMapper objectMapper;
 
     public CloudSyncService(CloudStorageProvider cloudStorage,
                             UserAccountRepository userAccountRepository,
-                            UserDatabaseInitializer userDatabaseInitializer,
-                            DeviceIdProvider deviceIdProvider) {
+                            UserProfileRepository userProfileRepository,
+                            NoteRepository noteRepository,
+                            NoteTagRepository noteTagRepository,
+                            TaskRepository taskRepository,
+                            TaskCategoryRepository taskCategoryRepository,
+                            ErrorRepository errorRepository,
+                            ResumeRepository resumeRepository,
+                            DeviceIdProvider deviceIdProvider,
+                            EntityManager entityManager,
+                            ObjectMapper objectMapper) {
         this.cloudStorage = cloudStorage;
         this.userAccountRepository = userAccountRepository;
-        this.userDatabaseInitializer = userDatabaseInitializer;
+        this.userProfileRepository = userProfileRepository;
+        this.noteRepository = noteRepository;
+        this.noteTagRepository = noteTagRepository;
+        this.taskRepository = taskRepository;
+        this.taskCategoryRepository = taskCategoryRepository;
+        this.errorRepository = errorRepository;
+        this.resumeRepository = resumeRepository;
         this.deviceIdProvider = deviceIdProvider;
+        this.entityManager = entityManager;
+        this.objectMapper = objectMapper;
     }
 
-    public SyncResponse sync(String userId) {
+    @Transactional
+    public SyncResponse sync(String userId, SyncRequest req) {
         String now = Instant.now().toString();
-        String platform = detectPlatform();
+        List<TableConfig> tables = resolveTables(req);
 
         SyncMeta remoteMeta = loadMeta(userId);
         if (remoteMeta.dataVersion() > 0) {
-            downloadInternal(userId);
+            downloadInternal(userId, tables);
         }
 
-        uploadInternal(userId, now, platform);
+        uploadInternal(userId, now, tables);
 
         return new SyncResponse(now);
+    }
+
+    private List<TableConfig> resolveTables(SyncRequest req) {
+        if (req == null || (req.tasks() == null && req.errors() == null
+                && req.notes() == null && req.settings() == null)) {
+            return TABLES;
+        }
+        List<String> selected = new ArrayList<>();
+        if (Boolean.TRUE.equals(req.tasks())) selected.addAll(MODULE_TABLES.get("tasks"));
+        if (Boolean.TRUE.equals(req.errors())) selected.addAll(MODULE_TABLES.get("errors"));
+        if (Boolean.TRUE.equals(req.notes())) selected.addAll(MODULE_TABLES.get("notes"));
+        if (Boolean.TRUE.equals(req.settings())) selected.addAll(MODULE_TABLES.get("settings"));
+        if (selected.isEmpty()) {
+            return TABLES;
+        }
+        return TABLES.stream().filter(t -> selected.contains(t.tableName())).toList();
     }
 
     public SyncStatus getStatus(String userId) {
@@ -98,26 +167,33 @@ public class CloudSyncService {
         safeUpload(userId + "/" + META_KEY, JsonUtils.toJson(updated).getBytes());
     }
 
-    private void uploadInternal(String userId, String now, String platform) {
-        UserAccount account = TenantContext.runAsDefault(() ->
-                userAccountRepository.findById(userId).orElseThrow());
+    @Transactional(readOnly = true)
+    protected void uploadInternal(String userId, String now, List<TableConfig> tables) {
+        UserAccount account = userAccountRepository.findById(userId).orElseThrow();
+        safeUpload(userId + "/" + USER_ACCOUNT_KEY, JsonUtils.toJson(toSnapshot(account)).getBytes());
 
-        String prefix = userId + "/";
+        Map<String, List<Object>> snapshot = new LinkedHashMap<>();
+        for (TableConfig tc : tables) {
+            List<?> rows = entityManager.createNativeQuery(
+                            "SELECT * FROM " + tc.tableName() + " WHERE owner_id = ?", tc.entityClass())
+                    .setParameter(1, userId)
+                    .getResultList();
+            snapshot.put(tc.tableName(), new ArrayList<>(rows));
+        }
 
-        byte[] accountJson = JsonUtils.toJson(toSnapshot(account)).getBytes();
-        safeUpload(prefix + USER_ACCOUNT_KEY, accountJson);
-
-        byte[] backupBytes = backupUserDatabase(userId);
-        if (backupBytes != null) {
-            safeUpload(prefix + USER_DB_BACKUP_KEY, backupBytes);
+        try {
+            safeUpload(userId + "/" + SNAPSHOT_KEY, objectMapper.writeValueAsBytes(snapshot));
+        } catch (Exception e) {
+            throw new RuntimeException("序列化同步快照失败", e);
         }
 
         SyncMeta meta = loadMeta(userId);
-        SyncMeta updated = updateMeta(meta, userId, now, platform);
-        safeUpload(prefix + META_KEY, JsonUtils.toJson(updated).getBytes());
+        SyncMeta updated = updateMeta(meta, userId, now);
+        safeUpload(userId + "/" + META_KEY, JsonUtils.toJson(updated).getBytes());
     }
 
-    private void downloadInternal(String userId) {
+    @Transactional
+    protected void downloadInternal(String userId, List<TableConfig> tables) {
         String prefix = userId + "/";
 
         if (!safeExists(prefix + META_KEY)) {
@@ -127,82 +203,79 @@ public class CloudSyncService {
         byte[] accountJson = safeDownload(prefix + USER_ACCOUNT_KEY);
         UserAccountSnapshot snapshot = JsonUtils.fromJson(new String(accountJson), UserAccountSnapshot.class);
 
-        TenantContext.runAsDefault(() -> {
-            if (!userAccountRepository.existsById(snapshot.id())) {
-                UserAccount account = new UserAccount();
-                account.setId(snapshot.id());
-                account.setEmail(snapshot.email());
-                account.setPasswordHash(snapshot.passwordHash());
-                account.setDisabled(snapshot.disabled());
-                userAccountRepository.save(account);
-            }
-            return null;
-        });
+        if (!userAccountRepository.existsById(snapshot.id())) {
+            UserAccount account = new UserAccount();
+            account.setId(snapshot.id());
+            account.setEmail(snapshot.email());
+            account.setPasswordHash(snapshot.passwordHash());
+            account.setDisabled(snapshot.disabled());
+            userAccountRepository.save(account);
+        }
 
-        if (safeExists(prefix + USER_DB_BACKUP_KEY)) {
-            byte[] backupBytes = safeDownload(prefix + USER_DB_BACKUP_KEY);
-            restoreUserDatabase(userId, backupBytes);
-        } else {
-            userDatabaseInitializer.ensureRegistered(userId);
+        if (!safeExists(prefix + SNAPSHOT_KEY)) {
+            return;
+        }
+
+        byte[] snapshotBytes = safeDownload(prefix + SNAPSHOT_KEY);
+        Map<String, List<Map<String, Object>>> remoteSnapshot;
+        try {
+            remoteSnapshot = objectMapper.readValue(snapshotBytes,
+                    new tools.jackson.core.type.TypeReference<Map<String, List<Map<String, Object>>>>() {});
+        } catch (Exception e) {
+            throw new RuntimeException("反序列化同步快照失败", e);
+        }
+
+        for (TableConfig tc : tables) {
+            List<Map<String, Object>> rows = remoteSnapshot.get(tc.tableName());
+            if (rows == null) continue;
+            mergeTable(tc, rows);
         }
     }
 
-    private byte[] backupUserDatabase(String userId) {
-        DataSource ds = userDatabaseInitializer.getDataSource(userId);
-        if (ds == null) {
-            return null;
-        }
-        Path tempFile = null;
-        try {
-            tempFile = Files.createTempFile("eta-backup-", ".zip");
-            try (Connection conn = ds.getConnection();
-                 Statement stmt = conn.createStatement()) {
-                stmt.execute("BACKUP TO '" + tempFile.toAbsolutePath().toString().replace("\\", "/") + "'");
+    @SuppressWarnings("unchecked")
+    private void mergeTable(TableConfig tc, List<Map<String, Object>> rows) {
+        for (Map<String, Object> row : rows) {
+            String id = (String) row.get("id");
+            if (id == null) continue;
+
+            Instant remoteUpdatedAt = parseInstant(row.get("updatedAt"));
+            Instant localUpdatedAt = getLocalUpdatedAt(tc.tableName(), id);
+
+            if (localUpdatedAt != null && remoteUpdatedAt != null && !remoteUpdatedAt.isAfter(localUpdatedAt)) {
+                continue;
             }
-            return Files.readAllBytes(tempFile);
-        } catch (Exception e) {
-            throw new RuntimeException("备份用户数据库失败: " + userId, e);
-        } finally {
-            if (tempFile != null) {
-                try {
-                    Files.deleteIfExists(tempFile);
-                } catch (IOException ignored) {
-                }
+
+            Object entity = objectMapper.convertValue(row, tc.entityClass());
+            switch (tc.tableName()) {
+                case "note_tag" -> noteTagRepository.save((NoteTag) entity);
+                case "eta_task_category" -> taskCategoryRepository.save((TaskCategory) entity);
+                case "eta_user_profile" -> userProfileRepository.save((UserProfile) entity);
+                case "eta_task" -> taskRepository.save((Task) entity);
+                case "eta_note" -> noteRepository.save((Note) entity);
+                case "eta_error" -> errorRepository.save((Error) entity);
+                case "eta_resume" -> resumeRepository.save((Resume) entity);
             }
         }
     }
 
-    private void restoreUserDatabase(String userId, byte[] backupBytes) {
-        Path tempFile = null;
-        try {
-            userDatabaseInitializer.closeAndRemoveDataSource(userId);
+    private Instant getLocalUpdatedAt(String tableName, String id) {
+        List<?> result = entityManager.createNativeQuery(
+                        "SELECT updated_at FROM " + tableName + " WHERE id = ?")
+                .setParameter(1, id)
+                .getResultList();
+        if (result.isEmpty()) return null;
+        Object val = result.get(0);
+        if (val == null) return null;
+        if (val instanceof Timestamp ts) return ts.toInstant();
+        if (val instanceof Instant inst) return inst;
+        return null;
+    }
 
-            tempFile = Files.createTempFile("eta-restore-", ".zip");
-            Files.write(tempFile, backupBytes);
-
-            Path userDir = Paths.get(userDbPath).toAbsolutePath();
-            Files.createDirectories(userDir);
-
-            String url = "jdbc:h2:file:" + userDir + "/" + userId
-                    + ";MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1";
-            String backupPath = tempFile.toAbsolutePath().toString().replace("\\", "/");
-
-            try (Connection conn = DriverManager.getConnection(url, "sa", "");
-                 Statement stmt = conn.createStatement()) {
-                stmt.execute("RESTORE FROM '" + backupPath + "'");
-            }
-
-            userDatabaseInitializer.ensureRegistered(userId);
-        } catch (Exception e) {
-            throw new RuntimeException("恢复用户数据库失败: " + userId, e);
-        } finally {
-            if (tempFile != null) {
-                try {
-                    Files.deleteIfExists(tempFile);
-                } catch (IOException ignored) {
-                }
-            }
-        }
+    private Instant parseInstant(Object val) {
+        if (val == null) return null;
+        if (val instanceof Instant inst) return inst;
+        if (val instanceof String s) return Instant.parse(s);
+        return null;
     }
 
     private SyncMeta loadMeta(String userId) {
@@ -215,8 +288,9 @@ public class CloudSyncService {
         return meta != null ? meta : SyncMeta.empty(userId);
     }
 
-    private SyncMeta updateMeta(SyncMeta meta, String userId, String now, String platform) {
+    private SyncMeta updateMeta(SyncMeta meta, String userId, String now) {
         String deviceId = deviceIdProvider.getDeviceId();
+        String platform = detectPlatform();
         List<DeviceInfo> devices = new ArrayList<>(meta.devices());
         devices.removeIf(d -> d.id().equals(deviceId));
         devices.add(new DeviceInfo(deviceId, "Device-" + deviceId.substring(0, 8), platform, true, now));

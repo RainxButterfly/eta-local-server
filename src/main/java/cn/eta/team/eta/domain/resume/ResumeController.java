@@ -7,10 +7,12 @@ import cn.eta.team.eta.common.util.JsonUtils;
 import cn.eta.team.eta.domain.resume.ResumeDtos.CreateRequest;
 import cn.eta.team.eta.domain.resume.ResumeDtos.QueryRequest;
 import cn.eta.team.eta.domain.resume.ResumeDtos.UpdateRequest;
+import cn.eta.team.eta.security.EtaPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -42,13 +44,15 @@ public class ResumeController {
     }
 
     @GetMapping
-    public Result<Paged<Resume>> list(@ModelAttribute QueryRequest q) {
-        return Result.ok(resumeService.list(q));
+    public Result<Paged<Resume>> list(@AuthenticationPrincipal EtaPrincipal principal,
+                                       @ModelAttribute QueryRequest q) {
+        return Result.ok(resumeService.list(principal.userId(), q));
     }
 
     @PostMapping
-    public Result<Resume> create(@Valid @RequestBody CreateRequest q) {
-        return Result.ok(resumeService.create(q));
+    public Result<Resume> create(@AuthenticationPrincipal EtaPrincipal principal,
+                                 @Valid @RequestBody CreateRequest q) {
+        return Result.ok(resumeService.create(principal.userId(), q));
     }
 
     @GetMapping("/{id}")

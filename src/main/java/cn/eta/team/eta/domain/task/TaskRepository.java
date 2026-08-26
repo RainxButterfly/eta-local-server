@@ -10,14 +10,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface TaskRepository extends JpaRepository<Task, String> {
 
-    long countByCategoryId(String categoryId);
+    long countByCategoryIdAndOwnerId(String categoryId, String ownerId);
 
-    @Query("SELECT t FROM Task t WHERE " +
-           "(:status IS NULL OR :status = '' OR :status = 'all' OR t.status = :status) " +
+    @Query("SELECT t FROM Task t WHERE t.ownerId = :ownerId " +
+           "AND (:status IS NULL OR :status = '' OR :status = 'all' OR t.status = :status) " +
            "AND (:categoryId IS NULL OR :categoryId = '' OR t.categoryId = :categoryId) " +
            "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(t.tag) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "ORDER BY t.createdAt DESC")
-    Page<Task> findWithFilters(@Param("status") String status,
+    Page<Task> findWithFilters(@Param("ownerId") String ownerId,
+                               @Param("status") String status,
                                @Param("categoryId") String categoryId,
                                @Param("keyword") String keyword,
                                Pageable pageable);

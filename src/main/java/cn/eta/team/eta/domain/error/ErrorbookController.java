@@ -10,9 +10,11 @@ import cn.eta.team.eta.domain.error.ErrorDtos.ReviewSubmitRequest;
 import cn.eta.team.eta.domain.error.ErrorDtos.ReviewSubmitVO;
 import cn.eta.team.eta.domain.error.ErrorDtos.SubjectStat;
 import cn.eta.team.eta.domain.error.ErrorDtos.UpdateRequest;
+import cn.eta.team.eta.security.EtaPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,13 +35,15 @@ public class ErrorbookController {
     private final ErrorService errorService;
 
     @GetMapping
-    public Result<Paged<Error>> list(@ModelAttribute QueryRequest q) {
-        return Result.ok(errorService.list(q));
+    public Result<Paged<Error>> list(@AuthenticationPrincipal EtaPrincipal principal,
+                                      @ModelAttribute QueryRequest q) {
+        return Result.ok(errorService.list(principal.userId(), q));
     }
 
     @PostMapping
-    public Result<Error> create(@Valid @RequestBody CreateRequest q) {
-        return Result.ok(errorService.create(q));
+    public Result<Error> create(@AuthenticationPrincipal EtaPrincipal principal,
+                                @Valid @RequestBody CreateRequest q) {
+        return Result.ok(errorService.create(principal.userId(), q));
     }
 
     @GetMapping("/{id}")
@@ -59,17 +63,18 @@ public class ErrorbookController {
     }
 
     @GetMapping("/categories")
-    public Result<List<SubjectStat>> categories() {
-        return Result.ok(errorService.getSubjectStats());
+    public Result<List<SubjectStat>> categories(@AuthenticationPrincipal EtaPrincipal principal) {
+        return Result.ok(errorService.getSubjectStats(principal.userId()));
     }
 
     @GetMapping("/review")
-    public Result<List<Error>> review() {
-        return Result.ok(errorService.review());
+    public Result<List<Error>> review(@AuthenticationPrincipal EtaPrincipal principal) {
+        return Result.ok(errorService.review(principal.userId()));
     }
 
     @PostMapping("/{id}/review")
-    public Result<ReviewSubmitVO> submitReview(@PathVariable String id, @Valid @RequestBody ReviewSubmitRequest q) {
+    public Result<ReviewSubmitVO> submitReview(@PathVariable String id,
+                                                @Valid @RequestBody ReviewSubmitRequest q) {
         return Result.ok(errorService.submitReview(id, q));
     }
 }

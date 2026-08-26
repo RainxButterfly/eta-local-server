@@ -8,18 +8,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UuidGenerator;
 
-/**
- * 笔记标签实体。每个用户私有，同一用户下标签名唯一。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
+import java.time.Instant;
+
 @Entity
 @Table(name = "note_tag")
 @Getter
 @Setter
+@SQLRestriction("is_deleted = false")
 public class NoteTag {
 
     @Id
@@ -32,4 +30,12 @@ public class NoteTag {
 
     @Column(length = 20)
     private String color;
+
+    private Instant updatedAt = Instant.now();
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
+
+    @Column(name = "owner_id", length = 36)
+    private String ownerId;
 }

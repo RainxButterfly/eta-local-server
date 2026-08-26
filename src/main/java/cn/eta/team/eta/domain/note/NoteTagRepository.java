@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface NoteTagRepository extends JpaRepository<NoteTag, String> {
 
-    Optional<NoteTag> findByName(String name);
+    Optional<NoteTag> findByNameAndOwnerId(String name, String ownerId);
 
-    boolean existsByName(String name);
+    boolean existsByNameAndOwnerId(String name, String ownerId);
 }

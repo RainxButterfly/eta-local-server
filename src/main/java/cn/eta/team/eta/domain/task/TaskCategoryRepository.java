@@ -4,7 +4,11 @@ package cn.eta.team.eta.domain.task;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface TaskCategoryRepository extends JpaRepository<TaskCategory, String> {
 
-    boolean existsByName(String name);
+    boolean existsByNameAndOwnerId(String name, String ownerId);
+
+    List<TaskCategory> findAllByOwnerId(String ownerId);
 }

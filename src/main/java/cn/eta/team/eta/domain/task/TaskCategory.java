@@ -8,18 +8,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UuidGenerator;
 
-/**
- * 任务分类实体。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
+import java.time.Instant;
+
 @Entity
 @Table(name = "eta_task_category")
 @Getter
 @Setter
+@SQLRestriction("is_deleted = false")
 public class TaskCategory {
 
     @Id
@@ -31,4 +29,12 @@ public class TaskCategory {
     private String name;
 
     private String color;
+
+    private Instant updatedAt = Instant.now();
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
+
+    @Column(name = "owner_id", length = 36)
+    private String ownerId;
 }

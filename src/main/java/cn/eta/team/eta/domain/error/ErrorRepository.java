@@ -11,21 +11,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ErrorRepository extends JpaRepository<Error, String> {
 
     @EntityGraph(attributePaths = { "tags" })
-    Page<Error> findBySubjectContaining(String subject, Pageable pageable);
+    Page<Error> findBySubjectContainingAndOwnerId(String subject, String ownerId, Pageable pageable);
 
     @EntityGraph(attributePaths = { "tags" })
-    Page<Error> findAll(Pageable pageable);
+    Page<Error> findAllByOwnerId(String ownerId, Pageable pageable);
 
     @EntityGraph(attributePaths = { "tags" })
     Optional<Error> findById(String id);
 
-    @Query("SELECT e.subject, COUNT(e) FROM Error e GROUP BY e.subject ORDER BY COUNT(e) DESC")
-    List<Object[]> countBySubject();
+    @Query("SELECT e.subject, COUNT(e) FROM Error e WHERE e.ownerId = :ownerId GROUP BY e.subject ORDER BY COUNT(e) DESC")
+    List<Object[]> countBySubject(@Param("ownerId") String ownerId);
 
     @EntityGraph(attributePaths = { "tags" })
-    List<Error> findByNextReviewAtLessThanEqual(Instant now);
+    List<Error> findByNextReviewAtLessThanEqualAndOwnerId(Instant now, String ownerId);
 }

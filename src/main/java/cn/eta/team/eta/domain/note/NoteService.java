@@ -31,22 +31,23 @@ public class NoteService {
     private final NoteTagRepository noteTagRepository;
 
     @Transactional(readOnly = true)
-    public Paged<Note> list(QueryRequest q) {
+    public Paged<Note> list(String ownerId, QueryRequest q) {
         int pageNum = q.page() != null ? q.page() - 1 : 0;
         int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Note> notePage = noteRepository.findWithFilters(q.keyword(), q.tag(), pageable);
+        Page<Note> notePage = noteRepository.findWithFilters(ownerId, q.keyword(), q.tag(), pageable);
         return Paged.of(notePage);
     }
 
     @Transactional
-    public Note create(CreateRequest q) {
+    public Note create(String ownerId, CreateRequest q) {
         Note note = new Note();
         note.setTitle(q.title());
         note.setBody(q.body());
-        note.setTags(resolveTags(q.tagNames()));
+        note.setOwnerId(ownerId);
+        note.setTags(resolveTags(ownerId, q.tagNames()));
         return noteRepository.save(note);
     }
 
@@ -65,7 +66,7 @@ public class NoteService {
             note.setBody(q.body());
         }
         if (q.tagNames() != null) {
-            note.setTags(resolveTags(q.tagNames()));
+            note.setTags(resolveTags(note.getOwnerId(), q.tagNames()));
         }
         note.setUpdatedAt(Instant.now());
         return noteRepository.save(note);
@@ -74,12 +75,14 @@ public class NoteService {
     @Transactional
     public void remove(String id) {
         Note note = requireNote(id);
-        noteRepository.delete(note);
+        note.setDeleted(true);
+        note.setUpdatedAt(Instant.now());
+        noteRepository.save(note);
     }
 
     @Transactional(readOnly = true)
-    public List<TagStat> listTags() {
-        List<Object[]> rows = noteRepository.listTags();
+    public List<TagStat> listTags(String ownerId) {
+        List<Object[]> rows = noteRepository.listTags(ownerId);
         List<TagStat> result = new ArrayList<>(rows.size());
         for (Object[] row : rows) {
             String name = (String) row[0];
@@ -90,26 +93,30 @@ public class NoteService {
     }
 
     @Transactional
-    public NoteTag createTag(CreateTagRequest q) {
-        if (noteTagRepository.existsByName(q.name())) {
+    public NoteTag createTag(String ownerId, CreateTagRequest q) {
+        if (noteTagRepository.existsByNameAndOwnerId(q.name(), ownerId)) {
             throw new BizException(ErrorCode.NOTE_TAG_NAME_EXISTS);
         }
         NoteTag tag = new NoteTag();
         tag.setName(q.name());
         tag.setColor(q.color());
+        tag.setOwnerId(ownerId);
         return noteTagRepository.save(tag);
     }
 
     @Transactional
-    public void removeTag(String tagId) {
+    public void removeTag(String ownerId, String tagId) {
         NoteTag tag = noteTagRepository.findById(tagId)
                 .orElseThrow(() -> new BizException(ErrorCode.NOTE_TAG_NOT_FOUND));
-        List<Note> notes = noteRepository.findByTagsId(tagId);
+        List<Note> notes = noteRepository.findByTagsIdAndOwnerId(tagId, ownerId);
         for (Note note : notes) {
             note.getTags().remove(tag);
+            note.setUpdatedAt(Instant.now());
         }
         noteRepository.saveAll(notes);
-        noteTagRepository.delete(tag);
+        tag.setDeleted(true);
+        tag.setUpdatedAt(Instant.now());
+        noteTagRepository.save(tag);
     }
 
     private Note requireNote(String id) {
@@ -117,7 +124,7 @@ public class NoteService {
                 .orElseThrow(() -> new BizException(ErrorCode.NOTE_NOT_FOUND));
     }
 
-    private List<NoteTag> resolveTags(List<String> tagNames) {
+    private List<NoteTag> resolveTags(String ownerId, List<String> tagNames) {
         if (tagNames == null || tagNames.isEmpty()) {
             return new ArrayList<>();
         }
@@ -127,10 +134,11 @@ public class NoteService {
                 continue;
             }
             String trimmed = name.trim();
-            NoteTag tag = noteTagRepository.findByName(trimmed)
+            NoteTag tag = noteTagRepository.findByNameAndOwnerId(trimmed, ownerId)
                     .orElseGet(() -> {
                         NoteTag t = new NoteTag();
                         t.setName(trimmed);
+                        t.setOwnerId(ownerId);
                         return noteTagRepository.save(t);
                     });
             resolved.add(tag);

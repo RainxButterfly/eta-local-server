@@ -5,17 +5,18 @@ package cn.eta.team.eta.domain.error;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.UuidGenerator;
-
 @Entity
 @Table(name = "eta_error")
 @Getter
 @Setter
+@SQLRestriction("is_deleted = false")
 public class Error {
 
     @Id
@@ -62,4 +63,12 @@ public class Error {
     private double stability = 0.0;
 
     private Instant lastReviewAt;
+
+    private Instant updatedAt = Instant.now();
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
+
+    @Column(name = "owner_id", length = 36)
+    private String ownerId;
 }

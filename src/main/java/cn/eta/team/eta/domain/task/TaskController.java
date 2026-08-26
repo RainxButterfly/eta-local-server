@@ -10,7 +10,9 @@ import cn.eta.team.eta.domain.task.TaskDtos.CreateRequest;
 import cn.eta.team.eta.domain.task.TaskDtos.QueryRequest;
 import cn.eta.team.eta.domain.task.TaskDtos.StatusRequest;
 import cn.eta.team.eta.domain.task.TaskDtos.UpdateRequest;
+import cn.eta.team.eta.security.EtaPrincipal;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -35,13 +37,15 @@ public class TaskController {
     }
 
     @GetMapping
-    public Result<Paged<Task>> list(@ModelAttribute QueryRequest q) {
-        return Result.ok(taskService.list(q));
+    public Result<Paged<Task>> list(@AuthenticationPrincipal EtaPrincipal principal,
+                                     @ModelAttribute QueryRequest q) {
+        return Result.ok(taskService.list(principal.userId(), q));
     }
 
     @PostMapping
-    public Result<Task> create(@Valid @RequestBody CreateRequest req) {
-        return Result.ok(taskService.create(req));
+    public Result<Task> create(@AuthenticationPrincipal EtaPrincipal principal,
+                               @Valid @RequestBody CreateRequest req) {
+        return Result.ok(taskService.create(principal.userId(), req));
     }
 
     @GetMapping("/{id}")
@@ -66,12 +70,13 @@ public class TaskController {
     }
 
     @GetMapping("/categories")
-    public Result<List<CategoryVO>> categories() {
-        return Result.ok(taskService.listCategories());
+    public Result<List<CategoryVO>> categories(@AuthenticationPrincipal EtaPrincipal principal) {
+        return Result.ok(taskService.listCategories(principal.userId()));
     }
 
     @PostMapping("/categories")
-    public Result<CategoryVO> createCategory(@Valid @RequestBody CategoryCreateRequest req) {
-        return Result.ok(taskService.createCategory(req));
+    public Result<CategoryVO> createCategory(@AuthenticationPrincipal EtaPrincipal principal,
+                                              @Valid @RequestBody CategoryCreateRequest req) {
+        return Result.ok(taskService.createCategory(principal.userId(), req));
     }
 }

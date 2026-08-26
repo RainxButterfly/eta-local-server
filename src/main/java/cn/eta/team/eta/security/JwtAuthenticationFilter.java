@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.security;
 
-import cn.eta.team.eta.tenant.TenantContext;
-import cn.eta.team.eta.tenant.UserDatabaseInitializer;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,12 +24,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String PREFIX = "Bearer ";
 
     private final JwtService jwtService;
-    private final UserDatabaseInitializer userDatabaseInitializer;
 
-    public JwtAuthenticationFilter(JwtService jwtService,
-                                    UserDatabaseInitializer userDatabaseInitializer) {
+    public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
-        this.userDatabaseInitializer = userDatabaseInitializer;
     }
 
     @Override
@@ -45,22 +40,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = jwtService.getUserId(claims);
                 String email = claims.get("email", String.class);
 
-                userDatabaseInitializer.ensureRegistered(userId);
-
                 EtaPrincipal principal = new EtaPrincipal(userId, email);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(principal, null, List.of());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                TenantContext.set(userId);
             } catch (Exception ignored) {
             }
         }
-        try {
-            chain.doFilter(request, response);
-        } finally {
-            TenantContext.clear();
-        }
+        chain.doFilter(request, response);
     }
 
     private String resolveToken(HttpServletRequest request) {

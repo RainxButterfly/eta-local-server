@@ -9,9 +9,11 @@ import cn.eta.team.eta.domain.note.NoteDtos.CreateTagRequest;
 import cn.eta.team.eta.domain.note.NoteDtos.QueryRequest;
 import cn.eta.team.eta.domain.note.NoteDtos.TagStat;
 import cn.eta.team.eta.domain.note.NoteDtos.UpdateRequest;
+import cn.eta.team.eta.security.EtaPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -32,13 +34,15 @@ public class NoteController {
     private final NoteService noteService;
 
     @GetMapping
-    public Result<Paged<Note>> list(@ModelAttribute QueryRequest q) {
-        return Result.ok(noteService.list(q));
+    public Result<Paged<Note>> list(@AuthenticationPrincipal EtaPrincipal principal,
+                                     @ModelAttribute QueryRequest q) {
+        return Result.ok(noteService.list(principal.userId(), q));
     }
 
     @PostMapping
-    public Result<Note> create(@Valid @RequestBody CreateRequest q) {
-        return Result.ok(noteService.create(q));
+    public Result<Note> create(@AuthenticationPrincipal EtaPrincipal principal,
+                               @Valid @RequestBody CreateRequest q) {
+        return Result.ok(noteService.create(principal.userId(), q));
     }
 
     @GetMapping("/{id}")
@@ -58,18 +62,20 @@ public class NoteController {
     }
 
     @GetMapping("/tags")
-    public Result<List<TagStat>> listTags() {
-        return Result.ok(noteService.listTags());
+    public Result<List<TagStat>> listTags(@AuthenticationPrincipal EtaPrincipal principal) {
+        return Result.ok(noteService.listTags(principal.userId()));
     }
 
     @PostMapping("/tags")
-    public Result<NoteTag> createTag(@Valid @RequestBody CreateTagRequest q) {
-        return Result.ok(noteService.createTag(q));
+    public Result<NoteTag> createTag(@AuthenticationPrincipal EtaPrincipal principal,
+                                      @Valid @RequestBody CreateTagRequest q) {
+        return Result.ok(noteService.createTag(principal.userId(), q));
     }
 
     @DeleteMapping("/tags/{id}")
-    public Result<Void> removeTag(@PathVariable String id) {
-        noteService.removeTag(id);
+    public Result<Void> removeTag(@AuthenticationPrincipal EtaPrincipal principal,
+                                   @PathVariable String id) {
+        noteService.removeTag(principal.userId(), id);
         return Result.ok();
     }
 }

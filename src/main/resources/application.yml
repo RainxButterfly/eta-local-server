@@ -11,7 +11,6 @@ server:
 spring:
   application:
     name: eta-backend
-  # H2 文件数据库（默认库存放用户表，用于注册/登录认证）
   datasource:
     url: jdbc:h2:file:./data/eta;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
@@ -19,7 +18,7 @@ spring:
     password: ""
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
@@ -43,8 +42,6 @@ management:
 
 # ETA 自定义配置
 eta:
-  user-db:
-    path: ./data/users
   jwt:
     # HS256 密钥，长度需 >= 32 字节；生产环境请通过环境变量覆盖
     secret: eta-app-2026-learner-toolkit-desktop-secret-key-for-hs256

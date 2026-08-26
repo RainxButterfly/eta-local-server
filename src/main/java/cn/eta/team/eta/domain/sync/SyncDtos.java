@@ -46,4 +46,11 @@ public final class SyncDtos {
             boolean disabled,
             String createdAt) {
     }
+
+    public record SyncRequest(
+            Boolean tasks,
+            Boolean errors,
+            Boolean notes,
+            Boolean settings) {
+    }
 }

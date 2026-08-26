@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 RainxButterfly 
 // SPDX-License-Identifier: AGPL-3.0-or-later
-package cn.eta.team.eta.feedback;
+package cn.eta.team.eta.domain.feedback;
 
 import cn.eta.team.eta.common.Result;
 import cn.eta.team.eta.common.util.JsonUtils;

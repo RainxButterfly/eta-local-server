@@ -39,14 +39,14 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public Paged<Task> list(QueryRequest q) {
+    public Paged<Task> list(String ownerId, QueryRequest q) {
         int pageNum = q.page() != null ? q.page() - 1 : 0;
         int page = PageUtils.page(pageNum);
         int size = PageUtils.size(q.pageSize());
         Pageable pageable = PageRequest.of(page, size);
 
         String keyword = q.keyword() == null ? null : q.keyword().trim();
-        Page<Task> taskPage = taskRepository.findWithFilters(q.status(), q.categoryId(), keyword, pageable);
+        Page<Task> taskPage = taskRepository.findWithFilters(ownerId, q.status(), q.categoryId(), keyword, pageable);
         return Paged.of(taskPage);
     }
 
@@ -56,7 +56,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task create(CreateRequest req) {
+    public Task create(String ownerId, CreateRequest req) {
         if (!StringUtils.hasText(req.title())) {
             throw new BizException(ErrorCode.TASK_TITLE_EMPTY);
         }
@@ -74,6 +74,7 @@ public class TaskService {
         task.setPriority(StringUtils.hasText(req.priority()) ? req.priority() : "中");
         task.setStatus("todo");
         task.setProgress(0);
+        task.setOwnerId(ownerId);
         Instant now = Instant.now();
         task.setCreatedAt(now);
         task.setUpdatedAt(now);
@@ -137,25 +138,28 @@ public class TaskService {
     @Transactional
     public void remove(String id) {
         Task task = requireTask(id);
-        taskRepository.delete(task);
+        task.setDeleted(true);
+        task.setUpdatedAt(Instant.now());
+        taskRepository.save(task);
     }
 
     @Transactional(readOnly = true)
-    public List<CategoryVO> listCategories() {
-        return categoryRepository.findAll().stream()
+    public List<CategoryVO> listCategories(String ownerId) {
+        return categoryRepository.findAllByOwnerId(ownerId).stream()
                 .map(c -> new CategoryVO(c.getId(), c.getName(), c.getColor(),
-                        taskRepository.countByCategoryId(c.getId())))
+                        taskRepository.countByCategoryIdAndOwnerId(c.getId(), ownerId)))
                 .toList();
     }
 
     @Transactional
-    public CategoryVO createCategory(CategoryCreateRequest req) {
-        if (categoryRepository.existsByName(req.name())) {
+    public CategoryVO createCategory(String ownerId, CategoryCreateRequest req) {
+        if (categoryRepository.existsByNameAndOwnerId(req.name(), ownerId)) {
             throw new BizException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
         TaskCategory category = new TaskCategory();
         category.setName(req.name());
         category.setColor(req.color());
+        category.setOwnerId(ownerId);
         categoryRepository.save(category);
         return new CategoryVO(category.getId(), category.getName(), category.getColor(), 0);
     }

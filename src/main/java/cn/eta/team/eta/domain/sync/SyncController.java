@@ -4,6 +4,7 @@ package cn.eta.team.eta.domain.sync;
 
 import cn.eta.team.eta.common.Result;
 import cn.eta.team.eta.domain.sync.SyncDtos.DeviceInfo;
+import cn.eta.team.eta.domain.sync.SyncDtos.SyncRequest;
 import cn.eta.team.eta.domain.sync.SyncDtos.SyncResponse;
 import cn.eta.team.eta.domain.sync.SyncDtos.SyncStatus;
 import cn.eta.team.eta.security.EtaPrincipal;
@@ -33,8 +34,8 @@ public class SyncController {
 
     @PostMapping
     public Result<SyncResponse> sync(@AuthenticationPrincipal EtaPrincipal principal,
-                                      @RequestBody(required = false) Map<String, Object> body) {
-        return Result.ok(cloudSyncService.sync(principal.userId()));
+                                      @RequestBody(required = false) SyncRequest req) {
+        return Result.ok(cloudSyncService.sync(principal.userId(), req));
     }
 
     @GetMapping("/devices")
