@@ -23,5 +23,10 @@
     "name": "eta.sync.device-id-file",
     "type": "java.lang.String",
     "description": "A description for 'eta.sync.device-id-file'"
+  },
+  {
+    "name": "eta.remote-service.location",
+    "type": "java.lang.String",
+    "description": "A description for 'eta.remote-service.location'"
   }
 ]}

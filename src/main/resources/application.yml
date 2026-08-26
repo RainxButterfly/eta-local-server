@@ -54,6 +54,8 @@ eta:
     cloud-dir: ./data/cloud-sync
     # 本地设备唯一标识文件
     device-id-file: ./data/device-id
+  remote-service:
+    location: ''
 
 logging:
   level:
