@@ -29,4 +29,13 @@ public interface ErrorRepository extends JpaRepository<Error, String> {
 
     @EntityGraph(attributePaths = { "tags" })
     List<Error> findByNextReviewAtLessThanEqualAndOwnerId(Instant now, String ownerId);
+
+    @Query("SELECT e FROM Error e WHERE e.ownerId = :ownerId AND " +
+           "(LOWER(e.question) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           " LOWER(e.answer) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           " LOWER(e.subject) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY e.createdAt DESC")
+    Page<Error> findWithFilters(@Param("ownerId") String ownerId,
+                       @Param("keyword") String keyword,
+                       Pageable pageable);
 }
