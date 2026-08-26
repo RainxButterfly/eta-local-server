@@ -23,9 +23,10 @@ public class StatsController {
 
     @GetMapping("/overview")
     public Result<Map<String, Object>> overview(@RequestParam(defaultValue = "w") String range) {
+        // studyHours 契约：由番茄钟插件专注计时汇总而来；未安装/未计时时为 0，前端据此降级展示。
         return Result.ok(Map.of(
                 "totalTasks", 5, "doneTasks", 1, "completionRate", 20,
-                "doingTasks", 2, "studyHours", 12.5, "totalNotes", 0,
+                "doingTasks", 2, "studyHours", 0, "totalNotes", 0,
                 "pendingErrors", 0, "errorMasteryRate", 0));
     }
 
