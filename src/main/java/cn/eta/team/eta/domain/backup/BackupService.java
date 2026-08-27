@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,7 +157,6 @@ public class BackupService {
         return snapshot;
     }
 
-    @SuppressWarnings("unchecked")
     private int importSnapshot(String ownerId, String json) {
         Map<String, List<Map<String, Object>>> snapshot = JsonUtils.fromJson(json,
                 new TypeReference<Map<String, List<Map<String, Object>>>>() {});

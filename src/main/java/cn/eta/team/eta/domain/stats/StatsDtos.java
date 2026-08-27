@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.domain.stats;
 
-import java.util.List;
-
 public final class StatsDtos {
 
     private StatsDtos() {

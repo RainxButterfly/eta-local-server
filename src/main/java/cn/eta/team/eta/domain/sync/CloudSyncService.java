@@ -238,7 +238,6 @@ public class CloudSyncService {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void mergeTable(TableConfig tc, List<Map<String, Object>> rows) {
         for (Map<String, Object> row : rows) {
             String id = (String) row.get("id");
