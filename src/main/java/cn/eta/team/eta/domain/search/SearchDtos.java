@@ -13,13 +13,13 @@ public final class SearchDtos {
             String id,
             String type,
             String title,
-            String snippet) {
+            String subtitle,
+            String tone) {
     }
 
     public record SearchGroup(
             String type,
             String name,
-            long total,
             List<SearchItem> items) {
     }
 

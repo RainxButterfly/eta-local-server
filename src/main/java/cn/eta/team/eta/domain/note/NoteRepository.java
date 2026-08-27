@@ -29,4 +29,6 @@ public interface NoteRepository extends JpaRepository<Note, String> {
     List<Object[]> listTags(@Param("ownerId") String ownerId);
 
     List<Note> findByTagsIdAndOwnerId(String tagId, String ownerId);
+
+    long countByOwnerId(String ownerId);
 }

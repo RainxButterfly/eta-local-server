@@ -38,4 +38,8 @@ public interface ErrorRepository extends JpaRepository<Error, String> {
     Page<Error> findWithFilters(@Param("ownerId") String ownerId,
                        @Param("keyword") String keyword,
                        Pageable pageable);
+
+    long countByOwnerId(String ownerId);
+
+    long countByMasteredAndOwnerId(boolean mastered, String ownerId);
 }

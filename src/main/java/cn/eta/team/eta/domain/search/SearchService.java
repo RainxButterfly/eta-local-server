@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SearchService {
 
-    private static final int SNIPPET_LEN = 100;
+    private static final int SUBTITLE_LEN = 100;
 
     private final TaskRepository taskRepository;
     private final NoteRepository noteRepository;
@@ -43,17 +43,17 @@ public class SearchService {
         long total = 0;
 
         Page<Task> tasks = taskRepository.findWithFilters(ownerId, null, null, keyword, pageable);
-        groups.add(new SearchGroup("task", "任务", tasks.getTotalElements(),
+        groups.add(new SearchGroup("task", "任务",
                 tasks.getContent().stream().map(this::toTaskItem).toList()));
         total += tasks.getTotalElements();
 
         Page<Note> notes = noteRepository.findWithFilters(ownerId, keyword, null, pageable);
-        groups.add(new SearchGroup("note", "笔记", notes.getTotalElements(),
+        groups.add(new SearchGroup("note", "笔记",
                 notes.getContent().stream().map(this::toNoteItem).toList()));
         total += notes.getTotalElements();
 
         Page<Error> errors = errorRepository.findWithFilters(ownerId, keyword, pageable);
-        groups.add(new SearchGroup("error", "错题", errors.getTotalElements(),
+        groups.add(new SearchGroup("error", "错题",
                 errors.getContent().stream().map(this::toErrorItem).toList()));
         total += errors.getTotalElements();
 
@@ -61,19 +61,19 @@ public class SearchService {
     }
 
     private SearchItem toTaskItem(Task t) {
-        return new SearchItem(t.getId(), "task", t.getTitle(), truncate(t.getDescription()));
+        return new SearchItem(t.getId(), "task", t.getTitle(), truncate(t.getDescription()), t.getTone());
     }
 
     private SearchItem toNoteItem(Note n) {
-        return new SearchItem(n.getId(), "note", n.getTitle(), truncate(n.getBody()));
+        return new SearchItem(n.getId(), "note", n.getTitle(), truncate(n.getBody()), n.getTone());
     }
 
     private SearchItem toErrorItem(Error e) {
-        return new SearchItem(e.getId(), "error", truncate(e.getQuestion()), truncate(e.getAnswer()));
+        return new SearchItem(e.getId(), "error", truncate(e.getQuestion()), truncate(e.getAnswer()), e.getTone());
     }
 
     private String truncate(String s) {
         if (s == null) return "";
-        return s.length() > SNIPPET_LEN ? s.substring(0, SNIPPET_LEN) + "..." : s;
+        return s.length() > SUBTITLE_LEN ? s.substring(0, SUBTITLE_LEN) + "..." : s;
     }
 }

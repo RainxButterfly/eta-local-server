@@ -12,6 +12,10 @@ public interface TaskRepository extends JpaRepository<Task, String> {
 
     long countByCategoryIdAndOwnerId(String categoryId, String ownerId);
 
+    long countByOwnerId(String ownerId);
+
+    long countByStatusAndOwnerId(String status, String ownerId);
+
     @Query("SELECT t FROM Task t WHERE t.ownerId = :ownerId " +
            "AND (:status IS NULL OR :status = '' OR :status = 'all' OR t.status = :status) " +
            "AND (:categoryId IS NULL OR :categoryId = '' OR t.categoryId = :categoryId) " +
