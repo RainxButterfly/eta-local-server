@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
+// SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.domain.resume;
 import cn.eta.team.eta.common.Paged;
@@ -27,12 +27,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 简历制作
- *
- * @author StarLeaf-Roxy ormisnal
- * @since 2026-08-24
- */
 @RestController
 @RequestMapping("/resumes")
 @RequiredArgsConstructor
@@ -40,12 +34,6 @@ public class ResumeController {
 
     private final ResumeService resumeService;
 
-    /**
-     * 模板列表
-     * 从静态资源读取
-     * 
-     * @throws IOException
-     */
     @GetMapping("/templates")
     public Result<List<Map<String, Object>>> templates() throws IOException {
         List<Map<String, Object>> templates = JsonUtils.fromJsonFile(
@@ -56,37 +44,38 @@ public class ResumeController {
     }
 
     @GetMapping
-    public Result<Paged<Resume>> list(@AuthenticationPrincipal EtaPrincipal p, @ModelAttribute QueryRequest q) {
-        return Result.ok(resumeService.list(p.userId(), q));
+    public Result<Paged<Resume>> list(@AuthenticationPrincipal EtaPrincipal principal,
+                                       @ModelAttribute QueryRequest q) {
+        return Result.ok(resumeService.list(principal.userId(), q));
     }
 
     @PostMapping
-    public Result<Resume> create(@AuthenticationPrincipal EtaPrincipal p, @Valid @RequestBody CreateRequest q) {
-        return Result.ok(resumeService.create(p.userId(), q));
+    public Result<Resume> create(@AuthenticationPrincipal EtaPrincipal principal,
+                                 @Valid @RequestBody CreateRequest q) {
+        return Result.ok(resumeService.create(principal.userId(), q));
     }
 
     @GetMapping("/{id}")
-    public Result<Resume> detail(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id) {
-        return Result.ok(resumeService.detail(id, p.userId()));
+    public Result<Resume> detail(@PathVariable String id) {
+        return Result.ok(resumeService.detail(id));
     }
 
     @PutMapping("/{id}")
-    public Result<Resume> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
-            @Valid @RequestBody UpdateRequest q) {
-        return Result.ok(resumeService.update(p.userId(), id, q));
+    public Result<Resume> update(@PathVariable String id, @Valid @RequestBody UpdateRequest q) {
+        return Result.ok(resumeService.update(id, q));
     }
 
     @DeleteMapping("/{id}")
-    public Result<Void> remove(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id) {
-        resumeService.delete(p.userId(), id);
+    public Result<Void> remove(@PathVariable String id) {
+        resumeService.delete(id);
         return Result.ok();
     }
 
     @PostMapping("/{id}/export")
-    public Result<Map<String, String>> export(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
+    public Result<Map<String, String>> export(@PathVariable String id,
             @RequestBody Map<String, String> body) {
         String format = body.getOrDefault("format", "json");
         return Result.ok(Map.of("downloadUrl",
-                resumeService.export(p.userId(), id, format)));
+                resumeService.export(id, format)));
     }
 }

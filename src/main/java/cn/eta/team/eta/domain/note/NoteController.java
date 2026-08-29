@@ -26,12 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * 笔记接口。
- *
- * @author StarLeaf-Roxy ormisnal
- * @since 2026-08-24
- */
 @RestController
 @RequestMapping("/notes")
 @RequiredArgsConstructor
@@ -40,46 +34,48 @@ public class NoteController {
     private final NoteService noteService;
 
     @GetMapping
-    public Result<Paged<Note>> list(@AuthenticationPrincipal EtaPrincipal p, @ModelAttribute QueryRequest q) {
-        return Result.ok(noteService.list(p.userId(), q));
+    public Result<Paged<Note>> list(@AuthenticationPrincipal EtaPrincipal principal,
+                                     @ModelAttribute QueryRequest q) {
+        return Result.ok(noteService.list(principal.userId(), q));
     }
 
     @PostMapping
-    public Result<Note> create(@AuthenticationPrincipal EtaPrincipal p, @Valid @RequestBody CreateRequest q) {
-        return Result.ok(noteService.create(p.userId(), q));
+    public Result<Note> create(@AuthenticationPrincipal EtaPrincipal principal,
+                               @Valid @RequestBody CreateRequest q) {
+        return Result.ok(noteService.create(principal.userId(), q));
     }
 
     @GetMapping("/{id}")
-    public Result<Note> detail(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id) {
-        return Result.ok(noteService.detail(p.userId(), id));
+    public Result<Note> detail(@PathVariable String id) {
+        return Result.ok(noteService.detail(id));
     }
 
     @PutMapping("/{id}")
-    public Result<Note> update(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id,
-                               @Valid @RequestBody UpdateRequest q) {
-        return Result.ok(noteService.update(p.userId(), id, q));
+    public Result<Note> update(@PathVariable String id, @Valid @RequestBody UpdateRequest q) {
+        return Result.ok(noteService.update(id, q));
     }
 
     @DeleteMapping("/{id}")
-    public Result<Void> remove(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id) {
-        noteService.remove(p.userId(), id);
+    public Result<Void> remove(@PathVariable String id) {
+        noteService.remove(id);
         return Result.ok();
     }
 
     @GetMapping("/tags")
-    public Result<List<TagStat>> listTags(@AuthenticationPrincipal EtaPrincipal p) {
-        return Result.ok(noteService.listTags(p.userId()));
+    public Result<List<TagStat>> listTags(@AuthenticationPrincipal EtaPrincipal principal) {
+        return Result.ok(noteService.listTags(principal.userId()));
     }
 
     @PostMapping("/tags")
-    public Result<NoteTag> createTag(@AuthenticationPrincipal EtaPrincipal p,
-                                     @Valid @RequestBody CreateTagRequest q) {
-        return Result.ok(noteService.createTag(p.userId(), q));
+    public Result<NoteTag> createTag(@AuthenticationPrincipal EtaPrincipal principal,
+                                      @Valid @RequestBody CreateTagRequest q) {
+        return Result.ok(noteService.createTag(principal.userId(), q));
     }
 
     @DeleteMapping("/tags/{id}")
-    public Result<Void> removeTag(@AuthenticationPrincipal EtaPrincipal p, @PathVariable String id) {
-        noteService.removeTag(p.userId(), id);
+    public Result<Void> removeTag(@AuthenticationPrincipal EtaPrincipal principal,
+                                   @PathVariable String id) {
+        noteService.removeTag(principal.userId(), id);
         return Result.ok();
     }
 }

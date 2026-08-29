@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.Column;
@@ -22,15 +23,13 @@ import lombok.Setter;
 @Table(name = "eta_note")
 @Getter
 @Setter
+@SQLRestriction("is_deleted = false")
 public class Note {
 
     @Id
     @UuidGenerator
     @Column(length = 36)
     private String id;
-
-    @Column(nullable = false)
-    private String ownerId;
 
     @Column(nullable = false)
     private String title;
@@ -51,4 +50,10 @@ public class Note {
     private Instant createdAt = Instant.now();
 
     private Instant updatedAt = Instant.now();
+
+    @Column(name = "is_deleted")
+    private boolean deleted = false;
+
+    @Column(name = "owner_id", length = 36)
+    private String ownerId;
 }

@@ -11,23 +11,35 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ErrorRepository extends JpaRepository<Error, String> {
 
     @EntityGraph(attributePaths = { "tags" })
-    Page<Error> findByOwnerIdAndSubjectContaining(String ownerId, String subject, Pageable pageable);
+    Page<Error> findBySubjectContainingAndOwnerId(String subject, String ownerId, Pageable pageable);
 
     @EntityGraph(attributePaths = { "tags" })
-    Page<Error> findByOwnerId(String ownerId, Pageable pageable);
+    Page<Error> findAllByOwnerId(String ownerId, Pageable pageable);
 
     @EntityGraph(attributePaths = { "tags" })
-    Optional<Error> findByIdAndOwnerId(String id, String ownerId);
+    Optional<Error> findById(String id);
 
-    // 统计各学科错题数量（按用户筛选）
     @Query("SELECT e.subject, COUNT(e) FROM Error e WHERE e.ownerId = :ownerId GROUP BY e.subject ORDER BY COUNT(e) DESC")
-    List<Object[]> countBySubject(String ownerId);
+    List<Object[]> countBySubject(@Param("ownerId") String ownerId);
 
     @EntityGraph(attributePaths = { "tags" })
-    List<Error> findByOwnerIdAndNextReviewAtLessThanEqual(String ownerId, Instant now);
+    List<Error> findByNextReviewAtLessThanEqualAndOwnerId(Instant now, String ownerId);
 
+    @Query("SELECT e FROM Error e WHERE e.ownerId = :ownerId AND " +
+           "(LOWER(e.question) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           " LOWER(e.answer) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           " LOWER(e.subject) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY e.createdAt DESC")
+    Page<Error> findWithFilters(@Param("ownerId") String ownerId,
+                       @Param("keyword") String keyword,
+                       Pageable pageable);
+
+    long countByOwnerId(String ownerId);
+
+    long countByMasteredAndOwnerId(boolean mastered, String ownerId);
 }

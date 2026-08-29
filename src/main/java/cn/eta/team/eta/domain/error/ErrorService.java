@@ -45,9 +45,9 @@ public class ErrorService {
         Page<Error> errorPage;
         String subject = q.subject();
         if (subject != null && !subject.isBlank()) {
-            errorPage = errorRepository.findByOwnerIdAndSubjectContaining(ownerId, subject, pageable);
+            errorPage = errorRepository.findBySubjectContainingAndOwnerId(subject, ownerId, pageable);
         } else {
-            errorPage = errorRepository.findByOwnerId(ownerId, pageable);
+            errorPage = errorRepository.findAllByOwnerId(ownerId, pageable);
         }
 
         return Paged.of(errorPage);
@@ -56,12 +56,12 @@ public class ErrorService {
     @Transactional
     public Error create(String ownerId, CreateRequest q) {
         Error error = new Error();
-        error.setOwnerId(ownerId);
         error.setQuestion(q.question());
         error.setAnswer(q.answer());
         error.setSubject(q.subject());
         error.setSource(q.source());
         error.setLevel(q.level());
+        error.setOwnerId(ownerId);
         if (q.tags() != null && !q.tags().isEmpty()) {
             error.setTags(q.tags());
         }
@@ -74,18 +74,18 @@ public class ErrorService {
     }
 
     @Transactional(readOnly = true)
-    public Error detail(String ownerId, String id) {
-        return requireOwnedError(ownerId, id);
+    public Error detail(String id) {
+        return requireError(id);
     }
 
-    private Error requireOwnedError(String ownerId, String id) {
-        return errorRepository.findByIdAndOwnerId(id, ownerId)
+    private Error requireError(String id) {
+        return errorRepository.findById(id)
                 .orElseThrow(() -> new BizException(ErrorCode.ERROR_NOT_FOUND));
     }
 
     @Transactional
-    public Error update(String ownerId, String id, UpdateRequest q) {
-        Error error = requireOwnedError(ownerId, id);
+    public Error update(String id, UpdateRequest q) {
+        Error error = requireError(id);
 
         if (q.question() != null) {
             error.setQuestion(q.question());
@@ -97,13 +97,16 @@ public class ErrorService {
             error.setTags(q.tags());
         }
 
+        error.setUpdatedAt(Instant.now());
         return errorRepository.save(error);
     }
 
     @Transactional
-    public void remove(String ownerId, String id) {
-        Error error = requireOwnedError(ownerId, id);
-        errorRepository.delete(error);
+    public void remove(String id) {
+        Error error = requireError(id);
+        error.setDeleted(true);
+        error.setUpdatedAt(Instant.now());
+        errorRepository.save(error);
     }
 
     @Transactional(readOnly = true)
@@ -114,13 +117,14 @@ public class ErrorService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<Error> review(String ownerId) {
-        return errorRepository.findByOwnerIdAndNextReviewAtLessThanEqual(ownerId, Instant.now());
+        return errorRepository.findByNextReviewAtLessThanEqualAndOwnerId(Instant.now(), ownerId);
     }
 
     @Transactional
-    public ReviewSubmitVO submitReview(String ownerId, String errorId, ReviewSubmitRequest q) {
-        Error error = requireOwnedError(ownerId, errorId);
+    public ReviewSubmitVO submitReview(String errorId, ReviewSubmitRequest q) {
+        Error error = requireError(errorId);
 
         boolean remembered = Boolean.TRUE.equals(q.remembered());
 
@@ -145,6 +149,7 @@ public class ErrorService {
         error.setMastered(newCard.getStability() > 365.0);
         error.setWrongCount(remembered ? error.getWrongCount() : error.getWrongCount() + 1);
         error.setLastWrongAt(remembered ? error.getLastWrongAt() : Instant.now());
+        error.setUpdatedAt(Instant.now());
 
         errorRepository.save(error);
 

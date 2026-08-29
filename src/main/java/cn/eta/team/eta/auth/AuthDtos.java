@@ -47,9 +47,14 @@ public final class AuthDtos {
     /** 对外暴露的用户信息（脱敏） */
     public record UserVO(String id, String nickname, String email, String avatar, String bio, String createdAt) {
 
-        public static UserVO from(User u) {
-            return new UserVO(u.getId(), u.getNickname(), u.getEmail(), u.getAvatar(), u.getBio(),
-                    u.getCreatedAt() == null ? null : u.getCreatedAt().toString());
+        public static UserVO from(UserAccount account, UserProfile profile) {
+            return new UserVO(
+                    account.getId(),
+                    profile != null ? profile.getNickname() : null,
+                    account.getEmail(),
+                    profile != null ? profile.getAvatar() : null,
+                    profile != null ? profile.getBio() : null,
+                    account.getCreatedAt() == null ? null : account.getCreatedAt().toString());
         }
     }
 

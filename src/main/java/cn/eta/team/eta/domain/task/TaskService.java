@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
+// SPDX-FileCopyrightText: 2026 RainxButterfly
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.domain.task;
 
@@ -24,12 +24,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
-/**
- * 任务业务：以当前登录用户为数据边界（ownerId 隔离）。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
- */
 @Service
 public class TaskService {
 
@@ -44,7 +38,6 @@ public class TaskService {
         this.categoryRepository = categoryRepository;
     }
 
-    /** 分页查询当前用户的任务（支持状态 / 分类 / 关键词筛选） */
     @Transactional(readOnly = true)
     public Paged<Task> list(String ownerId, QueryRequest q) {
         int pageNum = q.page() != null ? q.page() - 1 : 0;
@@ -53,15 +46,13 @@ public class TaskService {
         Pageable pageable = PageRequest.of(page, size);
 
         String keyword = q.keyword() == null ? null : q.keyword().trim();
-        Page<Task> taskPage = taskRepository.findByOwnerIdWithFilters(
-                ownerId, q.status(), q.categoryId(), keyword, pageable);
-
+        Page<Task> taskPage = taskRepository.findWithFilters(ownerId, q.status(), q.categoryId(), keyword, pageable);
         return Paged.of(taskPage);
     }
 
     @Transactional(readOnly = true)
-    public Task detail(String id, String ownerId) {
-        return requireOwnedTask(id, ownerId);
+    public Task detail(String id) {
+        return requireTask(id);
     }
 
     @Transactional
@@ -73,7 +64,6 @@ public class TaskService {
             throw new BizException(ErrorCode.BAD_REQUEST, "优先级仅支持 高/中/低");
         }
         Task task = new Task();
-        task.setOwnerId(ownerId);
         task.setTitle(req.title());
         task.setDescription(req.description());
         task.setCategoryId(req.categoryId());
@@ -84,6 +74,7 @@ public class TaskService {
         task.setPriority(StringUtils.hasText(req.priority()) ? req.priority() : "中");
         task.setStatus("todo");
         task.setProgress(0);
+        task.setOwnerId(ownerId);
         Instant now = Instant.now();
         task.setCreatedAt(now);
         task.setUpdatedAt(now);
@@ -91,8 +82,8 @@ public class TaskService {
     }
 
     @Transactional
-    public Task update(String id, String ownerId, UpdateRequest req) {
-        Task task = requireOwnedTask(id, ownerId);
+    public Task update(String id, UpdateRequest req) {
+        Task task = requireTask(id);
         if (req.title() != null) {
             task.setTitle(req.title());
         }
@@ -128,11 +119,11 @@ public class TaskService {
     }
 
     @Transactional
-    public Task updateStatus(String id, String ownerId, StatusRequest req) {
+    public Task updateStatus(String id, StatusRequest req) {
         if (!STATUSES.contains(req.status())) {
             throw new BizException(ErrorCode.ILLEGAL_TASK_STATUS);
         }
-        Task task = requireOwnedTask(id, ownerId);
+        Task task = requireTask(id);
         task.setStatus(req.status());
         if (req.progress() != null) {
             task.setProgress(Math.max(0, Math.min(100, req.progress())));
@@ -145,36 +136,36 @@ public class TaskService {
     }
 
     @Transactional
-    public void remove(String id, String ownerId) {
-        Task task = requireOwnedTask(id, ownerId);
-        taskRepository.delete(task);
+    public void remove(String id) {
+        Task task = requireTask(id);
+        task.setDeleted(true);
+        task.setUpdatedAt(Instant.now());
+        taskRepository.save(task);
     }
-
-    /* ---------------- 分类管理 ---------------- */
 
     @Transactional(readOnly = true)
     public List<CategoryVO> listCategories(String ownerId) {
-        return categoryRepository.findByOwnerId(ownerId).stream()
+        return categoryRepository.findAllByOwnerId(ownerId).stream()
                 .map(c -> new CategoryVO(c.getId(), c.getName(), c.getColor(),
-                        taskRepository.countByOwnerIdAndCategoryId(ownerId, c.getId())))
+                        taskRepository.countByCategoryIdAndOwnerId(c.getId(), ownerId)))
                 .toList();
     }
 
     @Transactional
     public CategoryVO createCategory(String ownerId, CategoryCreateRequest req) {
-        if (categoryRepository.existsByOwnerIdAndName(ownerId, req.name())) {
+        if (categoryRepository.existsByNameAndOwnerId(req.name(), ownerId)) {
             throw new BizException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
         TaskCategory category = new TaskCategory();
-        category.setOwnerId(ownerId);
         category.setName(req.name());
         category.setColor(req.color());
+        category.setOwnerId(ownerId);
         categoryRepository.save(category);
         return new CategoryVO(category.getId(), category.getName(), category.getColor(), 0);
     }
 
-    private Task requireOwnedTask(String id, String ownerId) {
-        return taskRepository.findByIdAndOwnerId(id, ownerId)
+    private Task requireTask(String id) {
+        return taskRepository.findById(id)
                 .orElseThrow(() -> new BizException(ErrorCode.TASK_NOT_FOUND));
     }
 }
