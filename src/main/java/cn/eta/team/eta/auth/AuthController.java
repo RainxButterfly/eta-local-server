@@ -1,5 +1,3 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.auth;
 
 import cn.eta.team.eta.common.Result;
@@ -22,9 +20,6 @@ import cn.eta.team.eta.auth.AuthDtos.UserVO;
 
 /**
  * 认证接口，路径前缀由全局 context-path(/api/v1) 提供。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
 @RestController
 @RequestMapping("/auth")

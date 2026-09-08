@@ -1,16 +1,8 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common;
-
-import lombok.Getter;
 
 /**
  * 业务状态码，与 <仓库根目录>/状态码含义.txt 保持一致。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
-@Getter
 public enum ErrorCode {
 
     /* ---------- 通用 ---------- */
@@ -70,4 +62,11 @@ public enum ErrorCode {
         this.message = message;
     }
 
+    public int getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }

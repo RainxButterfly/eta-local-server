@@ -1,5 +1,3 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common.util;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,9 +14,6 @@ import java.util.HexFormat;
  * <p>
  * 密码保存请使用 {@link #bcrypt(String)}（不可逆、自带盐）；
  * MD5 / SHA-256 仅用于完整性校验等非安全场景。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
 public final class CryptUtils {
 

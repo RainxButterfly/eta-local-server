@@ -1,12 +1,7 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common.util;
 
 /**
  * 脱敏工具：用于日志或展示时不泄露完整敏感信息（邮箱 / 手机号 / 姓名）。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
 public final class MaskUtils {
 
