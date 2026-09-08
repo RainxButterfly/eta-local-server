@@ -11,19 +11,18 @@ server:
 spring:
   application:
     name: eta-backend
-  # H2 内存数据库
   datasource:
-    url: jdbc:h2:mem:eta;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:./data/eta;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password: ""
   jpa:
     hibernate:
-      ddl-auto: create        # 开发期自动建表；生产可改为 none / validate
+      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
-        format_sql: true
+        '[format_sql]': true
   h2:
     console:
       enabled: true
@@ -47,8 +46,15 @@ eta:
     # HS256 密钥，长度需 >= 32 字节；生产环境请通过环境变量覆盖
     secret: eta-app-2026-learner-toolkit-desktop-secret-key-for-hs256
     expiration-ms: 86400000   # 令牌有效期：24h
+  sync:
+    # 云端模拟存储目录（当前使用 LocalCloudStorageProvider，未来替换为真实 HTTP 云端）
+    cloud-dir: ./data/cloud-sync
+    # 本地设备唯一标识文件
+    device-id-file: ./data/device-id
+  remote-service:
+    location: ''
 
 logging:
   level:
-    cn.eta.team.eta: INFO
-    org.hibernate.SQL: WARN
+    '[cn.eta.team.eta]': INFO
+    '[org.hibernate.SQL]': WARN

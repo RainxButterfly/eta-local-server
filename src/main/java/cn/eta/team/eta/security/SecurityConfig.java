@@ -46,13 +46,15 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 认证接口
-                        .requestMatchers("/auth/**", "/auth/login", "/auth/register").permitAll()
+                        // 仅公开注册与登录；me / updateMe / password 等仍需有效令牌
+                        .requestMatchers("/auth/register", "/auth/login").permitAll()
                         // H2 控制台与健康检查
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // 文件下载
                         .requestMatchers("/download/**").permitAll()
+                        // ocr服务
+                        .requestMatchers("/ocr/**").permitAll()
                         // 其余均需认证
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))

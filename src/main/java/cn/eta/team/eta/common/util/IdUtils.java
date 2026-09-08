@@ -1,14 +1,9 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common.util;
 
 import java.util.UUID;
 
 /**
  * ID 生成工具：UUID / 短随机字串。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
 public final class IdUtils {
 

@@ -1,5 +1,3 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common;
 
 import jakarta.validation.ConstraintViolationException;
@@ -19,9 +17,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * 全局异常处理：将各类异常统一转换为 { code, message, data } 响应。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {

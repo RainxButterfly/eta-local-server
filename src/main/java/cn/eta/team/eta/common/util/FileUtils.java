@@ -1,14 +1,9 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common.util;
 
 import java.util.Locale;
 
 /**
  * 文件工具：扩展名、安全化文件名、体积可读格式化。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
 public final class FileUtils {
 

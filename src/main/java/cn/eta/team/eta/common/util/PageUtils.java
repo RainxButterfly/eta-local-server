@@ -1,12 +1,7 @@
-// SPDX-FileCopyrightText: 2026 RainxButterfly 
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package cn.eta.team.eta.common.util;
 
 /**
  * 分页工具：统一 page / pageSize 的归一化与边界防护。
- *
- * @author StarLeaf-Roxy
- * @since 2026-08-24
  */
 public final class PageUtils {
 
