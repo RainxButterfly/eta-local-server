@@ -3,6 +3,7 @@
 package cn.eta.team.eta.domain.backup;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import cn.eta.team.eta.auth.UserProfile;
 import cn.eta.team.eta.auth.UserProfileRepository;
+import cn.eta.team.eta.common.util.FileStorageUtils;
 import cn.eta.team.eta.common.util.JsonUtils;
 import cn.eta.team.eta.domain.backup.BackupDtos.BackupInfo;
 import cn.eta.team.eta.domain.backup.BackupDtos.ExportResult;
@@ -136,7 +138,14 @@ public class BackupService {
     @Transactional
     public ExportResult exportData(String ownerId, String format) {
         BackupInfo info = create(ownerId, "local");
-        return new ExportResult("/api/v1/backup/download/" + info.filename());
+        // 备份写入后复制到文件存储，使下载端点 /api/v1/download/{fileName} 能够读取
+        try {
+            String content = Files.readString(Paths.get(BACKUP_DIR, ownerId, info.filename()));
+            FileStorageUtils.saveToLocal(content.getBytes(StandardCharsets.UTF_8), info.filename());
+        } catch (IOException e) {
+            throw new RuntimeException("导出备份失败", e);
+        }
+        return new ExportResult("/api/v1/download/" + info.filename());
     }
 
     @Transactional
